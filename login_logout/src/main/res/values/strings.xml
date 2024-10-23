@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Converse Chat App</string>
+    <string name="made_by_atasa">Made By ATASA</string>
+    <string name="create_new_account">CREATE NEW ACCOUNT</string>
+    <string name="already_registered_question">Already Registered? Login</string>
+    <string name="user_photo">photo of the user using chat app</string>
+    <string name="login">LOGIN</string>
+    <string name="signup">SIGNUP</string>
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+</resources>
