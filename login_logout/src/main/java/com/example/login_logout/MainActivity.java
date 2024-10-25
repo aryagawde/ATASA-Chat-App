@@ -3,17 +3,10 @@ package com.example.login_logout;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import org.mindrot.jbcrypt.BCrypt;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import android.widget.Button;
-import android.widget.EditText;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -22,7 +15,12 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
-public class MainActivity extends AppCompatActivity{
+import org.mindrot.jbcrypt.BCrypt;
+
+import android.widget.Button;
+import android.widget.EditText;
+
+public class MainActivity extends AppCompatActivity {
 
     EditText full_name, username, password;
     Button already_registered, signup;
@@ -39,15 +37,15 @@ public class MainActivity extends AppCompatActivity{
         password = findViewById(R.id.password);
         already_registered = findViewById(R.id.already_registered);
         signup = findViewById(R.id.signup);
-        String FullName = full_name.getText().toString();
-        String UserName = username.getText().toString();
-        String Password = password.getText().toString();
 
-        signup.setOnClickListener(new View.OnClickListener(){
+        signup.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view){
+            public void onClick(View view) {
+                String FullName = full_name.getText().toString();
+                String UserName = username.getText().toString();
+                String Password = password.getText().toString();
+
                 processFormFields(FullName, UserName, Password);
-                GoToSignIn(view);
             }
         });
     }
@@ -56,70 +54,75 @@ public class MainActivity extends AppCompatActivity{
         return BCrypt.hashpw(plainPassword, BCrypt.gensalt());
     }
 
-    public void processFormFields(String full_name, String username, String password){
-        boolean p = validatePassword(password);
-        boolean u = validateUsername(username);
-        boolean f = validateFullName(full_name);
-        String p = String.valueof
-        Toast.makeText(MainActivity.this, p, u, f, Toast.LENGTH_LONG).show();
-        if(!validatePassword(password) && !validateUsername(username) && !validateFullName(full_name)){
-            database = FirebaseDatabase.getInstance();
-            reference = database.getReference("users");
-            String hashed_password = hashPassword(password);
-            HelperClass helperClass = new HelperClass(hashed_password, username, full_name);
-            reference.child(username).setValue(helperClass);
-            Toast.makeText(MainActivity.this, "Registration Successful", Toast.LENGTH_LONG).show();
-        }
-        else{
-            Toast.makeText(MainActivity.this, "Registration Unuccessful", Toast.LENGTH_LONG).show();
-        }
+    public void processFormFields(String fullName, String userName, String password) {
+        boolean isFullNameValid = validateFullName(fullName);
+        boolean isPasswordValid = validatePassword(password);
 
+        if (isFullNameValid && isPasswordValid) {
+            validateUsername(userName, fullName, password);
+        } else {
+            Toast.makeText(MainActivity.this, "Registration Unsuccessful", Toast.LENGTH_LONG).show();
+        }
     }
 
-    public boolean validateUsername(String UserName){
-        final boolean[] flag = { true };
-        if(UserName.isEmpty()){
+    public void validateUsername(String userName, String fullName, String password) {
+        if (userName.isEmpty()) {
             username.setError("Username cannot be empty!");
-            return false;
+            return;
         }
-        else{
-            username.setError(null);
-            DatabaseReference reference = FirebaseDatabase.getInstance().getReference("users");
-            Query check = reference.orderByChild("username").equalTo(UserName);
-            check.addListenerForSingleValueEvent(new ValueEventListener(){
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    if(snapshot.exists()){
-                        flag[0] = false;
-                        Toast.makeText(MainActivity.this, "Username already exists", Toast.LENGTH_LONG).show();
-                    }
+
+        username.setError(null);
+        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("users");
+        Query check = reference.orderByChild("username").equalTo(userName);
+
+        check.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    Toast.makeText(MainActivity.this, "Username already exists", Toast.LENGTH_LONG).show();
+                } else {
+                    registerUser(fullName, userName, password);
                 }
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {}
-            });
-        }
-        return flag[0];
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(MainActivity.this, "Database Error", Toast.LENGTH_LONG).show();
+            }
+        });
     }
-    public boolean validatePassword(String Password){
-        if(Password.isEmpty()){
-            password.setError("Password cannot be empty!");
+
+    public void registerUser(String fullName, String userName, String password) {
+        database = FirebaseDatabase.getInstance();
+        reference = database.getReference("users");
+
+        String hashedPassword = hashPassword(password);
+        HelperClass helperClass = new HelperClass(hashedPassword, userName, fullName);
+        reference.child(userName).setValue(helperClass);
+
+        Toast.makeText(MainActivity.this, "Registration Successful", Toast.LENGTH_LONG).show();
+        GoToSignIn();
+    }
+
+    public boolean validatePassword(String password) {
+        if (password.isEmpty()) {
+            this.password.setError("Password cannot be empty!");
             return false;
         }
-        else{
-            password.setError(null);
-            return true;}
+        this.password.setError(null);
+        return true;
     }
-    public boolean validateFullName(String FullName){
-        if(FullName.isEmpty()){
-            full_name.setError("Full Name cannot be empty!");
+
+    public boolean validateFullName(String fullName) {
+        if (fullName.isEmpty()) {
+            this.full_name.setError("Full Name cannot be empty!");
             return false;
         }
-        else{
-            full_name.setError(null);
-            return true;
-        }
+        this.full_name.setError(null);
+        return true;
     }
-    public void GoToSignIn(View view) {
+
+    public void GoToSignIn() {
         Intent intent = new Intent(MainActivity.this, Login_Activity.class);
         startActivity(intent);
         finish();
