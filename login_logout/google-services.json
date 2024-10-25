@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "167897418934",
+    "project_id": "converse-chat-application",
+    "storage_bucket": "converse-chat-application.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:167897418934:android:76131fd2e77789f0ab2a17",
+        "android_client_info": {
+          "package_name": "com.example.conversechatapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_chw_vain_PKxUcwdAxq0CnkUK0eZZY8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:167897418934:android:5dbe4a42c070c026ab2a17",
+        "android_client_info": {
+          "package_name": "com.example.login_logout"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_chw_vain_PKxUcwdAxq0CnkUK0eZZY8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
