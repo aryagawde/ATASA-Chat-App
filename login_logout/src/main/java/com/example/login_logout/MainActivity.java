@@ -48,6 +48,13 @@ public class MainActivity extends AppCompatActivity {
                 processFormFields(FullName, UserName, Password);
             }
         });
+
+        already_registered.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                GoToSignIn();
+            }
+        });
     }
 
     public String hashPassword(String plainPassword) {
@@ -70,7 +77,6 @@ public class MainActivity extends AppCompatActivity {
             username.setError("Username cannot be empty!");
             return;
         }
-
         username.setError(null);
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference("users");
         Query check = reference.orderByChild("username").equalTo(userName);
