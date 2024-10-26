@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
         reference = database.getReference("users");
 
         String hashedPassword = hashPassword(password);
-        HelperClass helperClass = new HelperClass(hashedPassword, userName, fullName);
+        HelperClass helperClass = new HelperClass(hashedPassword, userName, fullName, false);
         reference.child(userName).setValue(helperClass);
 
         Toast.makeText(MainActivity.this, "Registration Successful", Toast.LENGTH_LONG).show();

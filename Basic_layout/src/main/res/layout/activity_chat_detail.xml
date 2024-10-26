@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:orientation="horizontal"
+android:layout_marginTop="0dp"
+tools:context=".ChatDetailActivity"
+android:padding="16dp">
+
+    <TextView
+        android:id="@+id/user_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="12dp"
+        android:layout_marginTop="0dp"
+        android:text="Username"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/user_name"
+        android:layout_marginLeft="12dp"
+        android:layout_gravity="center_vertical"
+        android:text="Offline"
+        android:textColor="@android:color/black"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/back_button"
+        android:layout_width="600dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="200dp"
+        android:layout_marginRight="12dp"
+        android:layout_toRightOf="@+id/user_name"
+        android:text="Back"
+        android:textColor="@android:color/black"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/chats_recycler"
+            android:layout_below="@+id/status"
+            android:layout_marginBottom="87dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginLeft="12dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+
+    <LinearLayout
+        android:id="@+id/message_input_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true"
+        android:padding="8dp"
+        android:background="@color/white"
+        android:layout_marginLeft="12dp"
+        android:elevation="4dp">
+
+        <ImageButton
+            android:id="@+id/button_attach"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/baseline_add_photo_alternate_24"
+            android:layout_marginTop="10dp"
+            android:contentDescription="Attach media"
+            android:background="?attr/selectableItemBackground" />
+
+        <ImageButton
+            android:id="@+id/button_mic"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:src="@drawable/mic"
+            android:contentDescription="Add voice"
+            android:background="?attr/selectableItemBackground"
+            android:layout_marginStart="8dp" />
+
+        <EditText
+            android:id="@+id/message_input"
+            android:layout_width="54dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginEnd="30dp"
+            android:layout_weight="1"
+            android:background="@drawable/border"
+            android:hint="Type a message"
+            android:gravity="center"
+            android:inputType="text"
+            android:textColor="@android:color/black"
+            android:textSize="16sp" />
+
+        <ImageButton
+            android:id="@+id/button_send"
+            android:src="@drawable/send"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:contentDescription="Send message"
+            android:background="?attr/selectableItemBackground"
+            android:layout_marginStart="0dp" />
+
+    </LinearLayout>
+
+
+</RelativeLayout>
