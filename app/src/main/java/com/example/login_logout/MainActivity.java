@@ -20,6 +20,8 @@ import org.mindrot.jbcrypt.BCrypt;
 import android.widget.Button;
 import android.widget.EditText;
 
+import java.util.UUID;
+
 public class MainActivity extends AppCompatActivity {
 
     EditText full_name, username, password;
@@ -87,7 +89,8 @@ public class MainActivity extends AppCompatActivity {
                 if (snapshot.exists()) {
                     Toast.makeText(MainActivity.this, "Username already exists", Toast.LENGTH_LONG).show();
                 } else {
-                    registerUser(fullName, userName, password);
+                    String userId = generateUserId();
+                    registerUser(fullName, userName, password, userId);
                 }
             }
 
@@ -98,12 +101,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void registerUser(String fullName, String userName, String password) {
+    public void registerUser(String fullName, String userName, String password, String userId) {
         database = FirebaseDatabase.getInstance();
         reference = database.getReference("users");
 
         String hashedPassword = hashPassword(password);
-        HelperClass helperClass = new HelperClass(hashedPassword, userName, fullName, false);
+        HelperClass helperClass = new HelperClass(hashedPassword, userName, fullName, false, userId);
         reference.child(userName).setValue(helperClass);
 
         Toast.makeText(MainActivity.this, "Registration Successful", Toast.LENGTH_LONG).show();
@@ -132,5 +135,10 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(MainActivity.this, Login_Activity.class);
         startActivity(intent);
         finish();
+    }
+
+    public String generateUserId() {
+        String userId = UUID.randomUUID().toString().replace("-", "");
+        return userId;
     }
 }

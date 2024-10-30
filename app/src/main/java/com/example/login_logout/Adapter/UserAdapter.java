@@ -41,6 +41,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder>{
                 Intent intent = new Intent(context, ChatDetailActivity.class);
                 intent.putExtra("username", helperClass.getUsername());
                 intent.putExtra("isLoggedIn",String.valueOf(helperClass.getLoggedin()));
+                intent.putExtra("userId", helperClass.getUserId());
                 context.startActivity(intent);
             }
         });

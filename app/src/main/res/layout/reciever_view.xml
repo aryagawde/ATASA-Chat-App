@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="5dp"
+    android:layout_marginTop="18dp"
+    android:layout_marginEnd="5dp"
+    android:background="@drawable/bg_reciever"
+    android:maxWidth="310dp"
+    android:maxHeight="400dp"
+    android:minHeight="30dp">
+
+    <!-- receiver's Text Message -->
+    <TextView
+        android:id="@+id/receiverText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:inputType="textLongMessage|textMultiLine"
+        android:maxWidth="270dp"
+        android:minWidth="50dp"
+        android:padding="16dp"
+        android:text="TextView"
+        app:layout_constraintBottom_toTopOf="@+id/receiverTime"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- receiver's Image -->
+    <ImageView
+        android:id="@+id/receiverImage"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/receiverText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- receiver's Video -->
+    <VideoView
+        android:id="@+id/receiverVideo"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/receiverText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- receiver's Timestamp -->
+    <TextView
+        android:id="@+id/receiverTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="00:00 AM"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/receiverVideo" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
