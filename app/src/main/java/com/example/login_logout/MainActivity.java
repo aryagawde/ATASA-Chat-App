@@ -54,8 +54,7 @@ public class MainActivity extends AppCompatActivity {
         already_registered.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                GoToSignIn();
-            }
+                GoToSignIn();}
         });
     }
 
@@ -106,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
         reference = database.getReference("users");
 
         String hashedPassword = hashPassword(password);
-        HelperClass helperClass = new HelperClass(hashedPassword, userName, fullName, false, userId);
+        HelperClass helperClass = new HelperClass(hashedPassword, userName, fullName, false, userId, "");
         reference.child(userName).setValue(helperClass);
 
         Toast.makeText(MainActivity.this, "Registration Successful", Toast.LENGTH_LONG).show();

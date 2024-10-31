@@ -4,7 +4,7 @@
     package="com.example.login_logout">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/> <!-- Optional, if you plan to write files -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -38,5 +38,6 @@
             android:name=".MainActivity"
             android:exported="false" />
     </application>
+
 
 </manifest>

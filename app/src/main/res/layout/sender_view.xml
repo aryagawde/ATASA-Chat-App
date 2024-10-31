@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="95dp"
@@ -12,7 +13,7 @@
     android:maxHeight="400dp"
     android:minHeight="30dp">
 
-    <!-- sender's Text Message -->
+    <!-- Sender's Text Message -->
     <TextView
         android:id="@+id/senderText"
         android:layout_width="wrap_content"
@@ -23,11 +24,23 @@
         android:minWidth="50dp"
         android:padding="16dp"
         android:text="TextView"
-        app:layout_constraintBottom_toTopOf="@+id/senderTime"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- sender's Image -->
+    <!-- Sender's Video Thumbnail -->
+    <ImageView
+        android:id="@+id/senderVideoThumbnail"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        android:scaleType="centerCrop"
+        app:layout_constraintTop_toBottomOf="@id/senderText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Sender's Image -->
     <ImageView
         android:id="@+id/senderImage"
         android:layout_width="200dp"
@@ -38,7 +51,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- sender's Video -->
+    <!-- Sender's Video -->
     <VideoView
         android:id="@+id/senderVideo"
         android:layout_width="200dp"
@@ -49,14 +62,37 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- sender's Timestamp -->
+    <!-- ProgressBar overlaying the VideoView -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/senderVideo"
+        app:layout_constraintBottom_toBottomOf="@id/senderVideo"
+        app:layout_constraintEnd_toEndOf="@id/senderVideo"
+        app:layout_constraintStart_toStartOf="@id/senderVideo" />
+
+    <ImageButton
+        android:id="@+id/senderDelete"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="4dp"
+        android:src="@drawable/delete"
+        android:contentDescription="delete_message"
+        app:layout_constraintEnd_toEndOf="@id/senderTime"
+        app:layout_constraintTop_toBottomOf="@id/senderTime"
+        android:visibility="gone"/>
+
     <TextView
         android:id="@+id/senderTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="00:00 AM"
+        android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.936"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/senderVideo" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,34 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
-xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:tools="http://schemas.android.com/tools"
-android:layout_width="match_parent"
-android:layout_height="wrap_content"
-android:orientation="horizontal"
-android:layout_marginTop="0dp"
-tools:context=".ChatDetailActivity"
-android:padding="16dp">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/chat_parent_layout"
+    tools:context=".ChatDetailActivity"
+    android:padding="16dp">
 
     <TextView
         android:id="@+id/user_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
         android:layout_marginLeft="12dp"
-        android:layout_marginTop="0dp"
         android:text="Username"
         android:textColor="@android:color/black"
         android:textSize="18sp"
         android:textStyle="bold" />
 
-
     <TextView
         android:id="@+id/status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/user_name"
+        android:layout_below="@id/user_name"
         android:layout_marginLeft="12dp"
-        android:layout_gravity="center_vertical"
         android:text="Offline"
         android:textColor="@android:color/black"
         android:textSize="12sp"
@@ -36,33 +30,30 @@ android:padding="16dp">
 
     <Button
         android:id="@+id/back_button"
-        android:layout_width="600dp"
+        android:layout_width="12dp"
         android:layout_height="48dp"
-        android:layout_gravity="center_vertical"
-        android:layout_marginLeft="200dp"
-        android:layout_marginRight="12dp"
-        android:layout_toRightOf="@+id/user_name"
+        android:layout_alignParentEnd="true"
+        android:layout_marginLeft="120dp"
+        android:layout_toEndOf="@id/user_name"
         android:text="Back"
         android:textColor="@android:color/black"
         android:textSize="12sp"
         android:textStyle="bold" />
 
     <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/chats_recycler"
-            android:layout_below="@+id/status"
-            android:layout_marginBottom="87dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginLeft="12dp"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+        android:id="@+id/chats_recycler"
+        android:layout_below="@id/status"
+        android:layout_marginTop="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_above="@id/message_input_container"
+        android:layout_marginBottom="12dp" />
 
     <LinearLayout
         android:id="@+id/message_input_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_marginLeft="0dp"
-        android:layout_marginBottom="13dp"
         android:background="@color/white"
         android:elevation="4dp"
         android:orientation="horizontal"
@@ -72,7 +63,6 @@ android:padding="16dp">
             android:id="@+id/button_attach"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginTop="10dp"
             android:contentDescription="Attach media"
             android:src="@drawable/baseline_add_photo_alternate_24" />
 
@@ -81,16 +71,13 @@ android:padding="16dp">
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="10dp"
             android:contentDescription="Add voice"
             android:src="@drawable/mic" />
 
         <EditText
             android:id="@+id/message_input"
-            android:layout_width="54dp"
+            android:layout_width="0dp"
             android:layout_height="48dp"
-            android:layout_marginTop="15dp"
-            android:layout_marginEnd="30dp"
             android:layout_weight="1"
             android:background="@drawable/border"
             android:gravity="center"
@@ -103,13 +90,7 @@ android:padding="16dp">
             android:id="@+id/button_send"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginStart="0dp"
-            android:layout_marginTop="10dp"
-            android:background="?attr/selectableItemBackground"
             android:contentDescription="Send message"
             android:src="@drawable/send" />
-
     </LinearLayout>
-
-
 </RelativeLayout>

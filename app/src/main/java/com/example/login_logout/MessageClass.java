@@ -1,20 +1,28 @@
 package com.example.login_logout;
 
 public class MessageClass {
-    String userId, message, messageId, mediaUrl;
+    String userId, message, messageId, mediaUrl, messageType;
+
     Long timestamp;
 
-    public MessageClass(String userId, String message, Long timestamp) {
-        this.userId = userId;
-        this.message = message;
-        this.timestamp = timestamp;
-    }
 
-    public MessageClass(String userId, String message, String mediaUrl) {
+    public MessageClass(String userId, String message, String messageType, String mediaUrl) {
         this.userId = userId;
         this.message = message;
         this.mediaUrl = mediaUrl;
+        this.messageType = messageType;
     }
+
+    public MessageClass(){}
+
+    public String getMessageType() {
+        return messageType;
+    }
+
+    public void setMessageType(String messageType) {
+        this.messageType = messageType;
+    }
+
 
     public String getMediaUrl() {
         return mediaUrl;
@@ -23,8 +31,6 @@ public class MessageClass {
     public void setMediaUrl(String mediaUrl) {
         this.mediaUrl = mediaUrl;
     }
-
-    public MessageClass(){}
 
     public String getUserId() {
         return userId;

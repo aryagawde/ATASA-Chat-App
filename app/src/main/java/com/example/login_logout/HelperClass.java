@@ -2,15 +2,24 @@ package com.example.login_logout;
 
 public class HelperClass {
 
-    String full_name, username, password, userId;
+    String full_name, username, password, userId, lastMessage;
     Boolean isLoggedin;
 
-    public HelperClass(String password, String username, String full_name, Boolean isLoggedin, String userId) {
+    public HelperClass(String password, String username, String full_name, Boolean isLoggedin, String userId, String lastMessage) {
         this.password = password;
         this.username = username;
         this.full_name = full_name;
         this.isLoggedin = isLoggedin;
         this.userId = userId;
+        this.lastMessage = lastMessage;
+    }
+
+    public String getLastMessage() {
+        return lastMessage;
+    }
+
+    public void setLastMessage(String lastMessage) {
+        this.lastMessage = lastMessage;
     }
 
     public String getUserId() {

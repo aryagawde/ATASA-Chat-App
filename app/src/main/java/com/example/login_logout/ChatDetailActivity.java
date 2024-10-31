@@ -2,7 +2,13 @@ package com.example.login_logout;
 
 import static android.app.PendingIntent.getActivity;
 
+import android.app.AlertDialog;
+import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -13,12 +19,16 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.FirebaseStorage;
+
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -28,21 +38,28 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 
 public class ChatDetailActivity extends AppCompatActivity {
+
+    private static final int REQUEST_CODE_IMAGE = 101;
+    private static final int REQUEST_CODE_VIDEO = 102;
+    private static final int REQUEST_PERMISSION_CODE = 123;
     TextView userfield, status, messageInput;
     FirebaseDatabase database;
     Button back;
     ImageButton send, attach_media;
     RecyclerView chatRecyclerView;
-    private static final int REQUEST_CODE_IMAGE = 101;
+    RelativeLayout chat_parent_layout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_detail);
+
 
         getSupportActionBar().hide();
 
@@ -53,13 +70,29 @@ public class ChatDetailActivity extends AppCompatActivity {
         userfield = findViewById(R.id.user_name);
         status = findViewById(R.id.status);
         chatRecyclerView = findViewById(R.id.chats_recycler);
+        chat_parent_layout = findViewById(R.id.chat_parent_layout);
         attach_media = findViewById(R.id.button_attach);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_PERMISSION_CODE);
+        }
 
         attach_media.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            intent.setType("image/*, video/*");
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            startActivityForResult(Intent.createChooser(intent, "Select Picture or Video"), REQUEST_CODE_IMAGE);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Select Media Type")
+                    .setItems(new String[]{"Image", "Video"}, (dialog, which) -> {
+                        if (which == 0) {
+                            // User selected Image
+                            Intent intent = new Intent(Intent.ACTION_PICK);
+                            intent.setType("image/*");
+                            startActivityForResult(Intent.createChooser(intent, "Select Image"), REQUEST_CODE_IMAGE);
+                        } else if (which == 1) {
+                            // User selected Video
+                            Intent intent = new Intent(Intent.ACTION_PICK);
+                            intent.setType("video/*");
+                            startActivityForResult(Intent.createChooser(intent, "Select Video"), REQUEST_CODE_VIDEO);
+                        }
+                    });
+            builder.show();
         });
 
         // Set up back button
@@ -82,8 +115,7 @@ public class ChatDetailActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         String receiver_id = sharedPreferences.getString("userId", null);
 
-        if (receiver_id == null) {
-            // Handle case where receiver info is missing
+        if (receiver_id == null){
             return;
         }
 
@@ -91,7 +123,7 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         // Set up RecyclerView and Adapter
         ArrayList<MessageClass> messageClasses = new ArrayList<>();
-        ChatAdapter chatAdapter = new ChatAdapter(messageClasses, this, receiver_id);
+        ChatAdapter chatAdapter = new ChatAdapter(messageClasses, this, receiver_id, chat_parent_layout);
         chatRecyclerView.setAdapter(chatAdapter);
         chatRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -123,7 +155,7 @@ public class ChatDetailActivity extends AppCompatActivity {
         // Send Message
         send.setOnClickListener(v -> {
             String message = messageInput.getText().toString();
-            final MessageClass model = new MessageClass(sender_id, message, "");
+            final MessageClass model = new MessageClass(sender_id, message, "Text", "");
             model.setTimestamp(new Date().getTime());
             messageInput.setText(""); // Clear input
 
@@ -137,13 +169,17 @@ public class ChatDetailActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE_IMAGE && resultCode == RESULT_OK && data != null) {
-            Uri selectedImageUri = data.getData();
-            if (selectedImageUri != null) {
+        if (resultCode == RESULT_OK && data != null) {
+            Uri selectedMediaUri = data.getData();
+            if (selectedMediaUri != null) {
                 SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
                 String receiver_id = sharedPreferences.getString("userId", null);
                 if (receiver_id != null) {
-                    uploadMediaToFirebase(selectedImageUri, receiver_id);
+                    if (requestCode == REQUEST_CODE_IMAGE) {
+                        uploadMediaToFirebase(selectedMediaUri, receiver_id, "Image");
+                    } else if (requestCode == REQUEST_CODE_VIDEO) {
+                        uploadMediaToFirebase(selectedMediaUri, receiver_id, "Video");
+                    }
                 } else {
                     Toast.makeText(this, "Receiver ID not found", Toast.LENGTH_SHORT).show();
                 }
@@ -151,29 +187,30 @@ public class ChatDetailActivity extends AppCompatActivity {
         }
     }
 
-    private void uploadMediaToFirebase(Uri mediaUri, String receiver_id) {
+
+    private void uploadMediaToFirebase(Uri mediaUri, String receiver_id, String mediaType) {
         String senderId = getIntent().getStringExtra("userId");
-        String fileName = "media/" + senderId + "_" + System.currentTimeMillis();
+        String fileName = mediaType + "/" + senderId + "_" + System.currentTimeMillis();
         StorageReference storageReference = FirebaseStorage.getInstance().getReference(fileName);
 
         storageReference.putFile(mediaUri).addOnSuccessListener(taskSnapshot -> {
             storageReference.getDownloadUrl().addOnSuccessListener(uri -> {
                 String mediaUrl = uri.toString();
-                sendMessageWithMedia(mediaUrl, receiver_id);
+                sendMessageWithMedia(mediaUrl, receiver_id, mediaType);
             });
         }).addOnFailureListener(e -> {
-            Toast.makeText(this, "Failed to upload media", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Failed to upload" + mediaType, Toast.LENGTH_SHORT).show();
         });
     }
 
 
-    private void sendMessageWithMedia(String mediaUrl, String receiver_id) {
+    private void sendMessageWithMedia(String mediaUrl, String receiver_id, String mediaType) {
         String senderId = getIntent().getStringExtra("userId");
         String senderRoom = senderId + receiver_id;
         String receiverRoom = receiver_id + senderId;
 
         // Create a message with a media URL
-        MessageClass mediaMessage = new MessageClass(senderId, "Image", mediaUrl);
+        MessageClass mediaMessage = new MessageClass(senderId, mediaType + " is attached", mediaType, mediaUrl);
         mediaMessage.setTimestamp(new Date().getTime());
 
         // Send to both sender and receiver rooms
@@ -183,4 +220,16 @@ public class ChatDetailActivity extends AppCompatActivity {
                         .child("one-one-chats").child(receiverRoom).push().setValue(mediaMessage));
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
+            } else {
+                // Permission denied, handle appropriately
+                Toast.makeText(this, "Permission denied to read external storage", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
 }
