@@ -148,6 +148,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             return true;
         });
 
+        if (messageClass.getMessageStatus().equals("scheduled")) {
+            holder.scheduledStatus.setVisibility(View.VISIBLE);
+            holder.scheduledStatus.setText("To be delivered");
+        } else {
+            holder.scheduledStatus.setVisibility(View.GONE);
+        }
+
         holder.senderDelete.setOnClickListener(v -> {
             // Create an AlertDialog with the options
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -349,7 +356,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     // ViewHolder for sender messages
     public static class SenderViewHolder extends RecyclerView.ViewHolder {
-        TextView senderMsg, senderTime;
+        TextView senderMsg, senderTime, scheduledStatus;
         ImageView senderImage, senderThumbnail;
         VideoView senderVideo;
         ProgressBar progressBar;
@@ -364,6 +371,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             senderThumbnail = itemView.findViewById(R.id.senderVideoThumbnail);
             progressBar = itemView.findViewById(R.id.progressBar);
             senderDelete = itemView.findViewById(R.id.senderDelete);
+            scheduledStatus = itemView.findViewById(R.id.scheduledStatus);
 
         }
     }

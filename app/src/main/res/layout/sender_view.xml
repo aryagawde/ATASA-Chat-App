@@ -85,6 +85,19 @@
         android:visibility="gone"/>
 
     <TextView
+        android:id="@+id/scheduledStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_gravity="end"
+        android:layout_marginEnd="40dp"
+        android:text="To be delivered"
+        android:textColor="@color/black"
+        app:layout_constraintEnd_toStartOf="@id/senderTime"
+        app:layout_constraintBottom_toBottomOf="@id/senderTime"
+        android:visibility="gone"/>
+
+    <TextView
         android:id="@+id/senderTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
