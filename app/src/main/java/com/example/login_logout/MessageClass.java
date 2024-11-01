@@ -6,7 +6,7 @@ public class MessageClass {
     Long timestamp;
 
 
-    public MessageClass(String userId, String message, String messageType, String mediaUrl, String senderRoom, String recieverRoom, String senderMessageId, String recieverMessageId, String messageStatus) {
+    public MessageClass(String userId, String message, String messageType, String mediaUrl, String senderRoom, String recieverRoom, String senderMessageId, String recieverMessageId, String messageStatus, long timestamp) {
         this.userId = userId;
         this.message = message;
         this.mediaUrl = mediaUrl;
@@ -16,6 +16,7 @@ public class MessageClass {
         this.senderMessageId = senderMessageId;
         this.recieverMessageId = recieverMessageId;
         this.messageStatus = messageStatus;
+        this.timestamp = timestamp;
     }
 
     public String getMessageStatus() {

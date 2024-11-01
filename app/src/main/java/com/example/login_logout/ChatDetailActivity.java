@@ -1,14 +1,10 @@
 package com.example.login_logout;
 
-import static android.app.PendingIntent.getActivity;
-
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.pm.PackageManager;
-import android.media.MediaPlayer;
 import android.Manifest;
-import android.content.pm.PackageManager;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import android.content.Intent;
@@ -17,8 +13,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.MediaStore;
-import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 
@@ -33,8 +27,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -49,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 public class ChatDetailActivity extends AppCompatActivity {
 
@@ -114,20 +105,18 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         // Sender Information
         String sender_username = getIntent().getStringExtra("username");
-        String isOnline = getIntent().getStringExtra("isLoggedIn");
+        String isOnline = getIntent().getStringExtra("status");
         String sender_id = getIntent().getStringExtra("userId");
 
         userfield.setText(sender_username);
-        if (isOnline.equals("false")) { status.setText("Offline"); }
-        else { status.setText("Online"); }
+        if (isOnline.equals("false")) {status.setText("Offline"); }
+        else { status.setText("Online");}
 
         // Receiver Information
         SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         String receiver_id = sharedPreferences.getString("userId", null);
 
-        if (receiver_id == null){
-            return;
-        }
+        if (receiver_id == null){return;}
 
         database = FirebaseDatabase.getInstance();
 
@@ -171,7 +160,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                         if (which == 0) {
                             SendNow(senderRoom, receiverRoom, sender_id, message);
                         } else if (which == 1) {
-//                            SendLater();
+                            SendLater(senderRoom, receiverRoom, sender_id, message, chatAdapter);
                         }
                     });
             builder.show();
@@ -184,75 +173,78 @@ public class ChatDetailActivity extends AppCompatActivity {
         DatabaseReference recieverMessageRef = database.getReference().child("one-one-chats") .child(receiverRoom).push();
         String recieverMessageId = recieverMessageRef.getKey();
 
-        final MessageClass model = new MessageClass(sender_id, message, "Text", "", senderRoom, receiverRoom, senderMessageId, recieverMessageId, "sent");
-        model.setTimestamp(new Date().getTime());
+        long timestamp = new Date().getTime();
+        final MessageClass model = new MessageClass(sender_id, message, "Text", "", senderRoom, receiverRoom, senderMessageId, recieverMessageId, "sent", timestamp);
         senderMsgRef.setValue(model)
                 .addOnSuccessListener(unused -> recieverMessageRef.setValue(model));
     }
-//    private void SendLater(){
-//        Calendar currentTime = Calendar.getInstance();
-//        DatePickerDialog datePickerDialog = new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
-//            TimePickerDialog timePickerDialog = new TimePickerDialog(this, (timeView, hourOfDay, minute) -> {
-//                Calendar selectedTime = Calendar.getInstance();
-//                selectedTime.set(year, month, dayOfMonth, hourOfDay, minute);
-//                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
-//                String scheduledDateTime = sdf.format(currentTime.getTime());
-//
-//                if (selectedTime.getTimeInMillis() > currentTime.getTimeInMillis() + 1800000) {
-//                    Toast.makeText(this, "Message Scheduled for: " + scheduledDateTime, Toast.LENGTH_SHORT).show();
-////                    scheduleMessage(selectedTime.getTimeInMillis());
-//                } else {
-//                    Toast.makeText(this, "Select a time at least 30 minutes from now", Toast.LENGTH_SHORT).show();
-//                }
-//            }, currentTime.get(Calendar.HOUR_OF_DAY), currentTime.get(Calendar.MINUTE), true);
-//            timePickerDialog.show();
-//        }, currentTime.get(Calendar.YEAR), currentTime.get(Calendar.MONTH), currentTime.get(Calendar.DAY_OF_MONTH));
-//        datePickerDialog.show();
-//    }
-//
-//    private void scheduleMessage(long scheduledTime, String message, String senderRoom, String recieverRoom, String sender_id){
-//        DatabaseReference senderRef = FirebaseDatabase.getInstance().getReference("one-one-chats").child(senderRoom).push();
-//        String senderMessageId = senderRef.getKey();
-//
-//        //No reciever id because if user deletes the message before it goes to reciever then it is deleted for everyone
-//        final MessageClass model = new MessageClass(sender_id, message, "Text", "", senderRoom, recieverRoom, senderMessageId, "", "scheduled");
-//        model.setTimestamp(new Date().getTime());
-//        senderRef.setValue(model).addOnSuccessListener(unused -> {
-//                    // Notify the sender's UI of a scheduled message
-//                    Toast.makeText(this, "Message scheduled", Toast.LENGTH_SHORT).show();
-//                    startMessageScheduler(scheduledTime, model); // Start the delayed task
-//                })
-//                .addOnFailureListener(e ->
-//                        Toast.makeText(this, "Failed to schedule message", Toast.LENGTH_SHORT).show()
-//                );
-//    }
-//
-//    // Method to start the delayed task for message delivery
-//    private void startMessageScheduler(long scheduledTimestamp, MessageClass message) {
-//        long delay = scheduledTimestamp - System.currentTimeMillis();
-//
-//        // Using a Handler with postDelayed to run the task at the scheduled time
-//        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-//            sendMessageToReceiverRoom(message);
-//        }, delay);
-//    }
-//
-//    // Method to move the message to the receiver's room and update status
-//    private void sendMessageToReceiverRoom(MessageClass message, String senderRoom, String receiverRoom) {
-//        FirebaseDatabase database = FirebaseDatabase.getInstance();
-//        DatabaseReference senderRoomRef = database.getReference("one-one-chats").child(senderRoom);
-//        DatabaseReference receiverRoomRef = database.getReference("one-one-chats").child(receiverRoom);
-//
-//        // Update message status in sender's room and move it to receiver's room
-//        senderRoomRef.child(message.getMessageId()).child("status").setValue("sent");  // Update status
-//        receiverRoomRef.push().setValue(message)
-//                .addOnSuccessListener(unused ->
-//                        Toast.makeText(this, "Message delivered to receiver", Toast.LENGTH_SHORT).show()
-//                )
-//                .addOnFailureListener(e ->
-//                        Toast.makeText(this, "Failed to deliver message", Toast.LENGTH_SHORT).show()
-//                );
-//    }
+    private void SendLater(String senderRoom, String receiverRoom, String sender_id, String message, ChatAdapter chatAdapter){
+        Calendar currentTime = Calendar.getInstance();
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
+            TimePickerDialog timePickerDialog = new TimePickerDialog(this, (timeView, hourOfDay, minute) -> {
+                Calendar selectedTime = Calendar.getInstance();
+                selectedTime.set(year, month, dayOfMonth, hourOfDay, minute);
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm a", Locale.getDefault());
+                String scheduledDateTime = sdf.format(selectedTime.getTime()); // use selectedTime here
+                if (selectedTime.getTimeInMillis() > currentTime.getTimeInMillis() + 1800000) {
+                    Toast.makeText(this, "Message Scheduled for: " + scheduledDateTime, Toast.LENGTH_SHORT).show();
+                    scheduleMessage(selectedTime.getTimeInMillis(), message, senderRoom, receiverRoom, sender_id, chatAdapter);
+                } else {
+                    Toast.makeText(this, "Select a time at least 30 minutes from now", Toast.LENGTH_SHORT).show();
+                }
+            }, currentTime.get(Calendar.HOUR_OF_DAY), currentTime.get(Calendar.MINUTE), true);
+            timePickerDialog.show();
+        }, currentTime.get(Calendar.YEAR), currentTime.get(Calendar.MONTH), currentTime.get(Calendar.DAY_OF_MONTH));
+        datePickerDialog.show();
+    }
+
+
+    private void scheduleMessage(long scheduledTime, String message, String senderRoom, String recieverRoom, String sender_id, ChatAdapter chatAdapter){
+        DatabaseReference senderRef = FirebaseDatabase.getInstance().getReference("one-one-chats").child(senderRoom).push();
+        String senderMessageId = senderRef.getKey();
+
+        //No reciever id because if user deletes the message before it goes to reciever then it is deleted for everyone
+        long timestamp = new Date().getTime();
+        final MessageClass model = new MessageClass(sender_id, message, "Text", "", senderRoom, recieverRoom, senderMessageId, "", "scheduled", scheduledTime);
+        senderRef.setValue(model).addOnSuccessListener(unused -> {
+                    // Notify the sender's UI of a scheduled message
+                    Toast.makeText(this, "Message scheduled", Toast.LENGTH_SHORT).show();
+                    startMessageScheduler(scheduledTime, model, senderRoom, recieverRoom, chatAdapter); // Start the delayed task
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Failed to schedule message", Toast.LENGTH_SHORT).show()
+                );
+    }
+
+    // Method to start the delayed task for message delivery
+    private void startMessageScheduler(long scheduledTimestamp, MessageClass message, String senderRoom, String receiverRoom, ChatAdapter chatAdapter) {
+        long delay = scheduledTimestamp - System.currentTimeMillis();
+
+        // Using a Handler with postDelayed to run the task at the scheduled time
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            sendMessageToReceiverRoom(message, senderRoom, receiverRoom, chatAdapter);
+        }, delay);
+    }
+
+    // Method to move the message to the receiver's room and update status
+    private void sendMessageToReceiverRoom(MessageClass message, String senderRoom, String receiverRoom, ChatAdapter chatAdapter) {
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference senderRoomRef = database.getReference("one-one-chats").child(senderRoom);
+        DatabaseReference receiverRoomRef = database.getReference("one-one-chats").child(receiverRoom);
+
+        // Update message status in sender's room and move it to receiver's room
+        senderRoomRef.child(message.getSenderMessageId()).child("status").setValue("sent").addOnSuccessListener(unused -> {
+            message.setMessageStatus("sent"); // Update status in the local object
+            chatAdapter.notifyDataSetChanged(); // Notify adapter to refresh UI
+        });
+        receiverRoomRef.push().setValue(message)
+                .addOnSuccessListener(unused -> {
+                    Toast.makeText(this, "Message delivered to receiver", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to deliver message", Toast.LENGTH_SHORT).show();
+                });
+    }
 
 
     @Override
@@ -304,8 +296,8 @@ public class ChatDetailActivity extends AppCompatActivity {
         String recieverMessageId = recieverMsgRef.getKey();
 
         // Create a message with a media URL
-        MessageClass mediaMessage = new MessageClass(senderId, mediaType + " is attached", mediaType, mediaUrl, senderRoom, receiverRoom, senderMessageId, recieverMessageId, "sent");
-        mediaMessage.setTimestamp(new Date().getTime());
+        long timestamp = new Date().getTime();
+        MessageClass mediaMessage = new MessageClass(senderId, mediaType + " is attached", mediaType, mediaUrl, senderRoom, receiverRoom, senderMessageId, recieverMessageId, "sent", timestamp);
 
         // Send to both sender and receiver rooms
         senderMsgRef.setValue(mediaMessage).addOnSuccessListener(unused -> recieverMsgRef.setValue(mediaMessage));

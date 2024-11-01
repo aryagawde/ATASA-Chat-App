@@ -19,7 +19,7 @@ public class SplashScreen extends AppCompatActivity {
         setContentView(R.layout.activity_splash_screen);
         getSupportActionBar().hide();
         SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-        boolean isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false);
+        boolean isLoggedIn = sharedPreferences.getBoolean("status", false);
         if(isLoggedIn){
             // User is already logged in, go to MainActivity
             Intent intent = new Intent(SplashScreen.this, RecentChats.class);

@@ -79,8 +79,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     @Override
     public int getItemCount() {
-        return messageClasses.size();
-    }
+        return messageClasses.size();}
 
     // Format timestamp to a readable time string
     private String formatTimestamp(long timestamp) {
@@ -148,9 +147,13 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             return true;
         });
 
-        if (messageClass.getMessageStatus().equals("scheduled")) {
+        String status = messageClass.getMessageStatus();
+
+        if ("scheduled".equals(status)) {  // Safe null check
             holder.scheduledStatus.setVisibility(View.VISIBLE);
-            holder.scheduledStatus.setText("To be delivered");
+            holder.scheduledStatus.setText("Scheduled");
+        } else if ("sent".equals(status)) {
+            holder.scheduledStatus.setVisibility(View.GONE);
         } else {
             holder.scheduledStatus.setVisibility(View.GONE);
         }

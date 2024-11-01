@@ -3,44 +3,18 @@ package com.example.login_logout;
 public class HelperClass {
 
     String full_name, username, password, userId, lastMessage;
-    Boolean isLoggedin;
+    Boolean status;
 
-    public HelperClass(String password, String username, String full_name, Boolean isLoggedin, String userId, String lastMessage) {
+    public HelperClass(String password, String username, String full_name, Boolean status, String userId, String lastMessage) {
         this.password = password;
         this.username = username;
         this.full_name = full_name;
-        this.isLoggedin = isLoggedin;
+        this.status = status;
         this.userId = userId;
         this.lastMessage = lastMessage;
     }
 
-    public String getLastMessage() {
-        return lastMessage;
-    }
-
-    public void setLastMessage(String lastMessage) {
-        this.lastMessage = lastMessage;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public Boolean getLoggedin() {
-        return isLoggedin;
-    }
-
-    public void setLoggedin(Boolean loggedin) {
-        isLoggedin = loggedin;
-    }
-
-    public HelperClass(){
-
-    }
+    public HelperClass(){}
 
     public String getFull_name() {
         return full_name;
@@ -64,5 +38,29 @@ public class HelperClass {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getLastMessage() {
+        return lastMessage;
+    }
+
+    public void setLastMessage(String lastMessage) {
+        this.lastMessage = lastMessage;
+    }
+
+    public Boolean getStatus() {
+        return status;
+    }
+
+    public void setStatus(Boolean status) {
+        this.status = status;
     }
 }

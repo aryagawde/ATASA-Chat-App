@@ -1,22 +1,14 @@
 package com.example.login_logout;
 
-import static java.security.AccessController.getContext;
-
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -31,7 +23,6 @@ import java.util.ArrayList;
 
 public class RecentChats extends AppCompatActivity {
     FirebaseDatabase database;
-    DatabaseReference reference;
     ArrayList<HelperClass> list = new ArrayList<>();
     UserAdapter adapter;
     RecyclerView recyclerView;
@@ -42,10 +33,10 @@ public class RecentChats extends AppCompatActivity {
         setContentView(R.layout.activity_recent_chats);
 
         // Initialize RecyclerView
-        RecyclerView recyclerView = findViewById(R.id.individual_user_recycler); // Make sure the ID matches your XML
+        recyclerView = findViewById(R.id.individual_user_recycler); // Correctly use the class variable
 
         // Set up the adapter and layout manager
-        UserAdapter adapter = new UserAdapter(this, list);
+        adapter = new UserAdapter(this, list); // Correctly use the class variable
         recyclerView.setAdapter(adapter);
 
         // Attach a layout manager to RecyclerView
@@ -53,6 +44,12 @@ public class RecentChats extends AppCompatActivity {
 
         // Initialize Firebase database and data listener
         database = FirebaseDatabase.getInstance();
+        loadDataFromFirebase();
+    }
+
+    private void loadDataFromFirebase() {
+        // Show loading indicator if necessary
+
         database.getReference().child("users").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -62,12 +59,12 @@ public class RecentChats extends AppCompatActivity {
                 for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
                     HelperClass helperClass = dataSnapshot.getValue(HelperClass.class);
                     String user = dataSnapshot.getKey();
-                    if (helperClass != null && (username == null || !user.equals(username))) {
+                    if (helperClass != null && (username == null || !username.equals(user))) {
                         helperClass.setUsername(user);
                         list.add(helperClass);
                     }
                 }
-                adapter.notifyDataSetChanged();
+                adapter.notifyDataSetChanged(); // Notify the adapter of data changes
             }
 
             @Override
@@ -76,6 +73,7 @@ public class RecentChats extends AppCompatActivity {
             }
         });
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
@@ -85,7 +83,7 @@ public class RecentChats extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        if(id == R.id.logout) {
+        if (id == R.id.logout) {
             logoutUser();
             return true;
         }
@@ -99,7 +97,7 @@ public class RecentChats extends AppCompatActivity {
 
         if (userID != null) {
             DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("users");
-            databaseReference.child(userID).child("isLoggedIn").setValue(false);
+            databaseReference.child(userID).child("status").setValue(false);
 
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.clear();
@@ -108,8 +106,7 @@ public class RecentChats extends AppCompatActivity {
             Intent intent = new Intent(RecentChats.this, MainActivity.class);
             startActivity(intent);
             finish();
-        }
-        else{
+        } else {
             Toast.makeText(RecentChats.this, "User is already logged out", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(RecentChats.this, MainActivity.class);
             startActivity(intent);

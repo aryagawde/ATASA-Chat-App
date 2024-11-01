@@ -75,19 +75,18 @@ public class Login_Activity extends AppCompatActivity {
                     }
                     else{
                         Toast.makeText(Login_Activity.this, "Login Successful", Toast.LENGTH_LONG).show();
-                        reference.child(username).child("isLoggedIn").setValue(true);
+                        reference.child(username).child("status").setValue(true);
                         String userId = snapshot.child(username).child("userId").getValue(String.class);
                         SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.clear();
                         editor.putString("username", username);
-                        editor.putBoolean("isLoggedIn", true);
+                        editor.putBoolean("status", true);
                         editor.putString("userId", userId);
                         editor.apply();
                         Intent intent = new Intent(Login_Activity.this, RecentChats.class);
                         startActivity(intent);
                         finish();
-
                     }
                 }
                 else{

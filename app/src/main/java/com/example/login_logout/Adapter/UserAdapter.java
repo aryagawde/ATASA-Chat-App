@@ -15,9 +15,9 @@ import com.example.login_logout.R;
 
 import java.util.ArrayList;
 
-public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder>{
-    ArrayList<HelperClass> list;
-    Context context;
+public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
+    final private ArrayList<HelperClass> list;
+    final private Context context;
 
     public UserAdapter(Context context, ArrayList<HelperClass> list) {
         this.context = context;
@@ -27,24 +27,33 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder>{
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.individual_user,parent,false);
+        View view = LayoutInflater.from(context).inflate(R.layout.individual_user, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull UserAdapter.ViewHolder holder, int position) {
         HelperClass helperClass = list.get(position);
-        holder.userName.setText(helperClass.getUsername());
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(context, ChatDetailActivity.class);
-                intent.putExtra("username", helperClass.getUsername());
-                intent.putExtra("isLoggedIn",String.valueOf(helperClass.getLoggedin()));
-                intent.putExtra("userId", helperClass.getUserId());
-                context.startActivity(intent);
-            }
-        });
+
+        // Ensure helperClass is not null before accessing its methods
+        if (helperClass != null) {
+            holder.userName.setText(helperClass.getUsername());
+
+            // Optionally set last message if you have it in your HelperClass
+            String lastMessage = helperClass.getLastMessage(); // Assuming you have this method
+            holder.lastMessage.setText(lastMessage != null ? lastMessage : ""); // Set empty string if null
+
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(context, ChatDetailActivity.class);
+                    intent.putExtra("username", helperClass.getUsername());
+                    intent.putExtra("status", String.valueOf(helperClass.getStatus()));
+                    intent.putExtra("userId", helperClass.getUserId());
+                    context.startActivity(intent);
+                }
+            });
+        }
     }
 
     @Override
@@ -52,10 +61,11 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder>{
         return list.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder{
-        TextView userName, lastMessage;
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        TextView userName;
+        TextView lastMessage;
 
-        public ViewHolder(@NonNull View itemView){
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
             userName = itemView.findViewById(R.id.nameOfUser);
             lastMessage = itemView.findViewById(R.id.lastMessage);
