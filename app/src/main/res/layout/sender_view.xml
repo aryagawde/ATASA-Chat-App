@@ -79,7 +79,7 @@
         android:layout_height="48dp"
         android:layout_marginTop="4dp"
         android:src="@drawable/delete"
-        android:contentDescription="delete_message"
+        android:contentDescription="sender_delete_message"
         app:layout_constraintEnd_toEndOf="@id/senderTime"
         app:layout_constraintTop_toBottomOf="@id/senderTime"
         android:visibility="gone"/>

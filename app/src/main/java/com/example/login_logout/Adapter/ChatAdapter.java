@@ -1,5 +1,6 @@
 package com.example.login_logout.Adapter;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.media.Image;
@@ -24,6 +25,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.login_logout.MessageClass;
 import com.example.login_logout.R;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -33,7 +35,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final ArrayList<MessageClass> messageClasses;
     private final Context context;
     private final String receiverId;
-
     private static final int SENDER_VIEW_TYPE = 1;
     private static final int RECEIVER_VIEW_TYPE = 2;
     private final RelativeLayout parentLayout;
@@ -86,7 +87,57 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.getDefault());
         return sdf.format(timestamp);
     }
-    
+
+    // Method to delete message for everyone
+    private void deleteMessageForEveryone(MessageClass messageClass) {
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        String senderRoom = messageClass.getSenderRoom();
+        String receiverRoom = messageClass.getRecieverRoom();
+        String senderMessageId = messageClass.getSenderMessageId();
+        String recieverMessageId = messageClass.getRecieverMessageId();
+
+        database.getReference().child("one-one-chats")
+                .child(senderRoom).child(senderMessageId)
+                .removeValue()
+                .addOnSuccessListener(unused ->
+                        database.getReference().child("one-one-chats").child(receiverRoom).child(recieverMessageId)
+                                .removeValue()
+                                .addOnSuccessListener(aVoid ->
+                                        Toast.makeText(context, "Message deleted for everyone", Toast.LENGTH_SHORT).show())
+                                .addOnFailureListener(e ->
+                                        Toast.makeText(context, "Failed to delete for receiver", Toast.LENGTH_SHORT).show())
+                )
+                .addOnFailureListener(e ->
+                        Toast.makeText(context, "Failed to delete for sender", Toast.LENGTH_SHORT).show()
+                );
+    }
+
+    private void deleteMessageForMe(MessageClass messageClass, String recipient) {
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        String senderRoom = messageClass.getSenderRoom();
+        String receiverRoom = messageClass.getRecieverRoom();
+        String senderMessageId = messageClass.getSenderMessageId();
+        String recieverMessageId = messageClass.getRecieverMessageId();
+
+        if (recipient.equals("sender")) {
+            database.getReference().child("one-one-chats")
+                    .child(senderRoom).child(senderMessageId)
+                    .removeValue()
+                    .addOnSuccessListener(aVoid ->
+                            Toast.makeText(context, "Message deleted for you", Toast.LENGTH_SHORT).show())
+                    .addOnFailureListener(e ->
+                            Toast.makeText(context, "Failed to delete", Toast.LENGTH_SHORT).show());
+        } else {
+            database.getReference().child("one-one-chats")
+                    .child(receiverRoom).child(recieverMessageId)
+                    .removeValue()
+                    .addOnSuccessListener(aVoid ->
+                            Toast.makeText(context, "Message deleted for you", Toast.LENGTH_SHORT).show())
+                    .addOnFailureListener(e ->
+                            Toast.makeText(context, "Failed to delete", Toast.LENGTH_SHORT).show());
+        }
+    }
+
     private void bindSenderMessage(SenderViewHolder holder, MessageClass messageClass, String time) {
         //Alert box for deleting messages for both me and others
         holder.itemView.setOnLongClickListener(v -> {
@@ -95,6 +146,22 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 holder.senderDelete.setVisibility(View.GONE);
             });
             return true;
+        });
+
+        holder.senderDelete.setOnClickListener(v -> {
+            // Create an AlertDialog with the options
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setTitle("Delete Message")
+                    .setItems(new String[]{"Delete for Me", "Delete for Everyone"}, (dialog, which) -> {
+                        if (which == 0) {
+                            deleteMessageForMe(messageClass, "sender");
+                        }
+                        else if (which == 1) {
+                            // "Delete for Everyone" option selected
+                            deleteMessageForEveryone(messageClass);
+                        }
+                    })
+                    .show();
         });
 
         holder.senderTime.setText(time);
@@ -183,6 +250,10 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 holder.recieverDelete.setVisibility(View.GONE);
             });
             return true;
+        });
+
+        holder.recieverDelete.setOnClickListener(v->{
+            deleteMessageForMe(messageClass, "reciever");
         });
 
         // Reset all views to GONE

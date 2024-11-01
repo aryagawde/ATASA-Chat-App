@@ -17,6 +17,8 @@ import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.FirebaseStorage;
 
@@ -71,7 +73,9 @@ public class ChatDetailActivity extends AppCompatActivity {
         status = findViewById(R.id.status);
         chatRecyclerView = findViewById(R.id.chats_recycler);
         chat_parent_layout = findViewById(R.id.chat_parent_layout);
+
         attach_media = findViewById(R.id.button_attach);
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_PERMISSION_CODE);
         }
@@ -155,14 +159,18 @@ public class ChatDetailActivity extends AppCompatActivity {
         // Send Message
         send.setOnClickListener(v -> {
             String message = messageInput.getText().toString();
-            final MessageClass model = new MessageClass(sender_id, message, "Text", "");
-            model.setTimestamp(new Date().getTime());
             messageInput.setText(""); // Clear input
 
-            database.getReference().child("one-one-chats").child(senderRoom)
-                    .push().setValue(model)
-                    .addOnSuccessListener(unused -> database.getReference().child("one-one-chats")
-                            .child(receiverRoom).push().setValue(model));
+            DatabaseReference senderMsgRef = database.getReference().child("one-one-chats").child(senderRoom).push();
+            String senderMessageId = senderMsgRef.getKey();
+
+            DatabaseReference recieverMessageRef = database.getReference().child("one-one-chats") .child(receiverRoom).push();
+            String recieverMessageId = recieverMessageRef.getKey();
+
+            final MessageClass model = new MessageClass(sender_id, message, "Text", "", senderRoom, receiverRoom, senderMessageId, recieverMessageId);
+            model.setTimestamp(new Date().getTime());
+            senderMsgRef.setValue(model)
+                    .addOnSuccessListener(unused -> recieverMessageRef.setValue(model));
         });
     }
 
@@ -209,15 +217,17 @@ public class ChatDetailActivity extends AppCompatActivity {
         String senderRoom = senderId + receiver_id;
         String receiverRoom = receiver_id + senderId;
 
+        DatabaseReference senderMsgRef = database.getReference().child("one-one-chats").child(senderRoom).push();
+        String senderMessageId = senderMsgRef.getKey();
+        DatabaseReference recieverMsgRef = database.getReference().child("one-one-chats").child(receiverRoom).push();
+        String recieverMessageId = recieverMsgRef.getKey();
+
         // Create a message with a media URL
-        MessageClass mediaMessage = new MessageClass(senderId, mediaType + " is attached", mediaType, mediaUrl);
+        MessageClass mediaMessage = new MessageClass(senderId, mediaType + " is attached", mediaType, mediaUrl, senderRoom, receiverRoom, senderMessageId, recieverMessageId);
         mediaMessage.setTimestamp(new Date().getTime());
 
         // Send to both sender and receiver rooms
-        database.getReference().child("one-one-chats").child(senderRoom).push()
-                .setValue(mediaMessage)
-                .addOnSuccessListener(unused -> database.getReference()
-                        .child("one-one-chats").child(receiverRoom).push().setValue(mediaMessage));
+        senderMsgRef.setValue(mediaMessage).addOnSuccessListener(unused -> recieverMsgRef.setValue(mediaMessage));
     }
 
     @Override
