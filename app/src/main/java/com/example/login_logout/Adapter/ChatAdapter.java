@@ -83,7 +83,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private void bindMessage(MessageViewHolder holder, MessageClass message, String time, boolean isSender) {
         holder.messageTime.setText(time);
-        holder.downloadButton.setVisibility(View.VISIBLE);
+        holder.downloadButton.setVisibility(View.GONE);
         holder.deleteButton.setOnClickListener(v -> showDeleteOptions(message, isSender));
 
         // Common for Text, Image, and Video types
@@ -100,14 +100,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 break;
             case "Image":
                 holder.imageView.setVisibility(View.VISIBLE);
+                holder.downloadButton.setVisibility(View.VISIBLE);
                 Glide.with(context).load(message.getMediaUrl()).error(R.drawable.error_image).into(holder.imageView);
+                holder.downloadButton.setOnClickListener(v -> downloadMedia(context, message.getMediaUrl(), message.getMessageType()));
                 break;
             case "Video":
                 setupVideo(holder, message.getMediaUrl());
+                holder.downloadButton.setVisibility(View.VISIBLE);
+                holder.downloadButton.setOnClickListener(v -> downloadMedia(context, message.getMediaUrl(), message.getMessageType()));
                 break;
         }
 
-        holder.downloadButton.setOnClickListener(v -> downloadMedia(context, message.getMediaUrl(), message.getMessageType()));
+
     }
 
     private void showDeleteOptions(MessageClass message, boolean isSender) {

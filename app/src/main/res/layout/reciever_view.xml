@@ -75,15 +75,14 @@
 
     <ImageButton
         android:id="@+id/recieverDelete"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_marginTop="4dp"
         android:layout_marginEnd="12dp"
         android:contentDescription="delete_message"
         android:src="@drawable/delete"
-        app:layout_constraintEnd_toEndOf="@id/recieverTime"
-        app:layout_constraintTop_toBottomOf="@id/recieverTime"
-        android:visibility="gone"/>
+        app:layout_constraintStart_toEndOf="@id/recieverDownload"
+        app:layout_constraintTop_toBottomOf="@id/recieverTime" />
 
     <TextView
         android:id="@+id/recieverTime"
@@ -99,9 +98,8 @@
 
     <ImageButton
         android:id="@+id/recieverDownload"
-        android:visibility="gone"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_marginTop="4dp"
         android:src="@drawable/downloads"
         app:layout_constraintStart_toStartOf="@id/recieverTime"

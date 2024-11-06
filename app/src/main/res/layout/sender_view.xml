@@ -77,14 +77,13 @@
 
     <ImageButton
         android:id="@+id/senderDelete"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_marginTop="4dp"
         android:src="@drawable/delete"
         android:contentDescription="sender_delete_message"
         app:layout_constraintEnd_toEndOf="@id/senderTime"
-        app:layout_constraintTop_toBottomOf="@id/scheduledStatus"
-        android:visibility="gone" />
+        app:layout_constraintTop_toBottomOf="@id/scheduledStatus" />
 
     <TextView
         android:id="@+id/scheduledStatus"
@@ -105,7 +104,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:text="00:00 AM"
-        android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.936"
         app:layout_constraintStart_toStartOf="parent"
@@ -113,13 +111,12 @@
 
     <ImageButton
         android:id="@+id/senderDownload"
-        android:visibility="gone"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
         android:layout_marginTop="4dp"
         android:src="@drawable/downloads"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.936"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/senderDelete"
         app:layout_constraintTop_toBottomOf="@id/senderTime" />
 </androidx.constraintlayout.widget.ConstraintLayout>
