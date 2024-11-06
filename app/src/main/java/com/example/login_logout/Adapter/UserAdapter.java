@@ -38,10 +38,12 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
         // Ensure helperClass is not null before accessing its methods
         if (helperClass != null) {
             holder.userName.setText(helperClass.getUsername());
-
-            // Optionally set last message if you have it in your HelperClass
-            String lastMessage = helperClass.getLastMessage(); // Assuming you have this method
-            holder.lastMessage.setText(lastMessage != null ? lastMessage : ""); // Set empty string if null
+            boolean status = helperClass.getStatus();
+            if(status){
+                holder.userStatus.setText("Online");
+            }
+            else{holder.userStatus.setText("Offline");
+            }
 
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -62,13 +64,12 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.ViewHolder> {
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView userName;
-        TextView lastMessage;
+        TextView userName, userStatus;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             userName = itemView.findViewById(R.id.nameOfUser);
-            lastMessage = itemView.findViewById(R.id.lastMessage);
+            userStatus = itemView.findViewById(R.id.statusOfUser);
         }
     }
 }

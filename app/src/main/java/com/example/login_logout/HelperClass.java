@@ -2,16 +2,15 @@ package com.example.login_logout;
 
 public class HelperClass {
 
-    String full_name, username, password, userId, lastMessage;
+    String full_name, username, password, userId;
     Boolean status;
 
-    public HelperClass(String password, String username, String full_name, Boolean status, String userId, String lastMessage) {
+    public HelperClass(String password, String username, String full_name, Boolean status, String userId) {
         this.password = password;
         this.username = username;
         this.full_name = full_name;
         this.status = status;
         this.userId = userId;
-        this.lastMessage = lastMessage;
     }
 
     public HelperClass(){}
@@ -48,13 +47,6 @@ public class HelperClass {
         this.userId = userId;
     }
 
-    public String getLastMessage() {
-        return lastMessage;
-    }
-
-    public void setLastMessage(String lastMessage) {
-        this.lastMessage = lastMessage;
-    }
 
     public Boolean getStatus() {
         return status;

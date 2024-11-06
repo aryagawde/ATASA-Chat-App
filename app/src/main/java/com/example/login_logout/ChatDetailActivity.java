@@ -1,8 +1,17 @@
 package com.example.login_logout;
 
 import android.app.AlertDialog;
+
+//import com.google.mlkit.nl.languageid.LanguageIdentification;
+//import com.google.mlkit.nl.languageid.LanguageIdentifier;
+//import com.google.cloud.translate.Translate;
+//import com.google.cloud.translate.TranslateOptions;
+//import com.google.cloud.translate.Translation;
+
 import android.app.DatePickerDialog;
+import android.app.DownloadManager;
 import android.app.TimePickerDialog;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.Manifest;
 import androidx.core.app.ActivityCompat;
@@ -11,6 +20,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.Button;
@@ -71,6 +81,7 @@ public class ChatDetailActivity extends AppCompatActivity {
         chatRecyclerView = findViewById(R.id.chats_recycler);
         chat_parent_layout = findViewById(R.id.chat_parent_layout);
 
+
         attach_media = findViewById(R.id.button_attach);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -96,25 +107,28 @@ public class ChatDetailActivity extends AppCompatActivity {
             builder.show();
         });
 
-        // Set up back button
-        back.setOnClickListener(view -> {
-            Intent intent = new Intent(ChatDetailActivity.this, RecentChats.class);
-            startActivity(intent);
-            finish();
-        });
-
         // Sender Information
         String sender_username = getIntent().getStringExtra("username");
         String isOnline = getIntent().getStringExtra("status");
         String sender_id = getIntent().getStringExtra("userId");
 
-        userfield.setText(sender_username);
-        if (isOnline.equals("false")) {status.setText("Offline"); }
-        else { status.setText("Online");}
-
         // Receiver Information
         SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         String receiver_id = sharedPreferences.getString("userId", null);
+        String receiverUsername = sharedPreferences.getString("username", null);
+
+
+        // Set up back button
+        back.setOnClickListener(view -> {
+            Intent intent = new Intent(ChatDetailActivity.this, RecentChats.class);
+            intent.putExtra("currentUser", receiverUsername);
+            startActivity(intent);
+            finish();
+        });
+
+        userfield.setText(sender_username);
+        if (isOnline.equals("false")) {status.setText("Offline"); }
+        else {status.setText("Online");}
 
         if (receiver_id == null){return;}
 
@@ -290,6 +304,7 @@ public class ChatDetailActivity extends AppCompatActivity {
         String senderRoom = senderId + receiver_id;
         String receiverRoom = receiver_id + senderId;
 
+
         DatabaseReference senderMsgRef = database.getReference().child("one-one-chats").child(senderRoom).push();
         String senderMessageId = senderMsgRef.getKey();
         DatabaseReference recieverMsgRef = database.getReference().child("one-one-chats").child(receiverRoom).push();
@@ -303,16 +318,16 @@ public class ChatDetailActivity extends AppCompatActivity {
         senderMsgRef.setValue(mediaMessage).addOnSuccessListener(unused -> recieverMsgRef.setValue(mediaMessage));
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_PERMISSION_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
-            } else {
-                // Permission denied, handle appropriately
-                Toast.makeText(this, "Permission denied to read external storage", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//        if (requestCode == REQUEST_PERMISSION_CODE) {
+//            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
+//            } else {
+//                // Permission denied, handle appropriately
+//                Toast.makeText(this, "Permission denied to read external storage", Toast.LENGTH_SHORT).show();
+//            }
+//        }
+//    }
 }

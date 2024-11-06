@@ -33,6 +33,7 @@
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:layout_marginTop="8dp"
+        android:src="@drawable/error_image"
         android:visibility="gone"
         android:scaleType="centerCrop"
         app:layout_constraintTop_toBottomOf="@id/senderText"
@@ -47,6 +48,7 @@
         android:layout_marginTop="8dp"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/senderText"
+        android:src="@drawable/error_image"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -57,6 +59,7 @@
         android:layout_height="200dp"
         android:layout_marginTop="8dp"
         android:visibility="gone"
+        android:src="@drawable/error_image"
         app:layout_constraintTop_toBottomOf="@id/senderText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -81,11 +84,11 @@
         android:contentDescription="sender_delete_message"
         app:layout_constraintEnd_toEndOf="@id/senderTime"
         app:layout_constraintTop_toBottomOf="@id/scheduledStatus"
-        android:visibility="gone"
-        />
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/scheduledStatus"
+        android:visibility="gone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
@@ -94,9 +97,7 @@
         android:text="Sceduled to be delivered"
         android:textColor="@color/black"
         app:layout_constraintEnd_toEndOf="@id/senderTime"
-        app:layout_constraintTop_toBottomOf="@id/senderTime"
-        android:visibility="gone"
-        />
+        app:layout_constraintTop_toBottomOf="@id/senderTime" />
 
     <TextView
         android:id="@+id/senderTime"
@@ -109,4 +110,16 @@
         app:layout_constraintHorizontal_bias="0.936"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/senderVideo" />
+
+    <ImageButton
+        android:id="@+id/senderDownload"
+        android:visibility="gone"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="4dp"
+        android:src="@drawable/downloads"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.936"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/senderTime" />
 </androidx.constraintlayout.widget.ConstraintLayout>

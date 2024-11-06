@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -26,6 +27,7 @@ public class RecentChats extends AppCompatActivity {
     ArrayList<HelperClass> list = new ArrayList<>();
     UserAdapter adapter;
     RecyclerView recyclerView;
+    TextView currentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +35,17 @@ public class RecentChats extends AppCompatActivity {
         setContentView(R.layout.activity_recent_chats);
 
         // Initialize RecyclerView
-        recyclerView = findViewById(R.id.individual_user_recycler); // Correctly use the class variable
+        recyclerView = findViewById(R.id.individual_user_recycler);
+        currentUser = findViewById(R.id.currentUser);
+
+        //If the user is recognised
+        String currentUsername = getIntent().getStringExtra("currentUser");
+        if(currentUsername != null){
+            currentUser.setText(currentUsername);
+        }
+        else {
+            currentUser.setText("Unknown");
+        }
 
         // Set up the adapter and layout manager
         adapter = new UserAdapter(this, list); // Correctly use the class variable
@@ -47,7 +59,7 @@ public class RecentChats extends AppCompatActivity {
         loadDataFromFirebase();
     }
 
-    private void loadDataFromFirebase() {
+    private void loadDataFromFirebase(){
         // Show loading indicator if necessary
 
         database.getReference().child("users").addValueEventListener(new ValueEventListener() {
@@ -93,15 +105,11 @@ public class RecentChats extends AppCompatActivity {
     private void logoutUser() {
         // Access SharedPreferences
         SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-        String userID = sharedPreferences.getString("username", null);
+        String username = sharedPreferences.getString("username", null);
 
-        if (userID != null) {
+        if (username != null) {
             DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference("users");
-            databaseReference.child(userID).child("status").setValue(false);
-
-            SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.clear();
-            editor.apply();
+            databaseReference.child(username).child("status").setValue(false);
 
             Intent intent = new Intent(RecentChats.this, MainActivity.class);
             startActivity(intent);

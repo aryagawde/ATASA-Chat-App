@@ -1,11 +1,13 @@
 package com.example.login_logout.Adapter;
 
 import android.app.AlertDialog;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
-import android.media.MediaPlayer;
-import android.media.Image;
 import android.net.Uri;
-import android.text.Layout;
+import android.os.AsyncTask;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +21,6 @@ import android.widget.Toast;
 import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -27,6 +28,10 @@ import com.example.login_logout.MessageClass;
 import com.example.login_logout.R;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -49,334 +54,223 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        if (viewType == SENDER_VIEW_TYPE) {
-            View view = LayoutInflater.from(context).inflate(R.layout.sender_view, parent, false);
-            return new SenderViewHolder(view);
-        } else {
-            View view = LayoutInflater.from(context).inflate(R.layout.reciever_view, parent, false);
-            return new ReceiverViewHolder(view);
-        }
+        int layoutId = (viewType == SENDER_VIEW_TYPE) ? R.layout.sender_view : R.layout.reciever_view;
+        View view = LayoutInflater.from(context).inflate(layoutId, parent, false);
+        return viewType == SENDER_VIEW_TYPE ? new SenderViewHolder(view) : new ReceiverViewHolder(view);
     }
 
     @Override
     public int getItemViewType(int position) {
-        String messageUserId = messageClasses.get(position).getUserId();
-        return messageUserId.equals(receiverId) ? RECEIVER_VIEW_TYPE : SENDER_VIEW_TYPE;
+        return messageClasses.get(position).getUserId().equals(receiverId) ? RECEIVER_VIEW_TYPE : SENDER_VIEW_TYPE;
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        MessageClass messageClass = messageClasses.get(position);
-        String time = formatTimestamp(messageClass.getTimestamp());
+        MessageClass message = messageClasses.get(position);
+        String time = new SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.getDefault()).format(message.getTimestamp());
 
         if (holder instanceof SenderViewHolder) {
-            bindSenderMessage((SenderViewHolder) holder, messageClass, time);
-        } else if (holder instanceof ReceiverViewHolder) {
-            bindReceiverMessage((ReceiverViewHolder) holder, messageClass, time);
+            bindMessage((SenderViewHolder) holder, message, time, true);
+        } else {
+            bindMessage((ReceiverViewHolder) holder, message, time, false);
         }
     }
-
 
     @Override
     public int getItemCount() {
-        return messageClasses.size();}
-
-    // Format timestamp to a readable time string
-    private String formatTimestamp(long timestamp) {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.getDefault());
-        return sdf.format(timestamp);
+        return messageClasses.size();
     }
 
-    // Method to delete message for everyone
-    private void deleteMessageForEveryone(MessageClass messageClass) {
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        String senderRoom = messageClass.getSenderRoom();
-        String receiverRoom = messageClass.getRecieverRoom();
-        String senderMessageId = messageClass.getSenderMessageId();
-        String recieverMessageId = messageClass.getRecieverMessageId();
+    private void bindMessage(MessageViewHolder holder, MessageClass message, String time, boolean isSender) {
+        holder.messageTime.setText(time);
+        holder.downloadButton.setVisibility(View.VISIBLE);
+        holder.deleteButton.setOnClickListener(v -> showDeleteOptions(message, isSender));
 
-        database.getReference().child("one-one-chats")
-                .child(senderRoom).child(senderMessageId)
-                .removeValue()
-                .addOnSuccessListener(unused ->
-                        database.getReference().child("one-one-chats").child(receiverRoom).child(recieverMessageId)
-                                .removeValue()
-                                .addOnSuccessListener(aVoid ->
-                                        Toast.makeText(context, "Message deleted for everyone", Toast.LENGTH_SHORT).show())
-                                .addOnFailureListener(e ->
-                                        Toast.makeText(context, "Failed to delete for receiver", Toast.LENGTH_SHORT).show())
-                )
-                .addOnFailureListener(e ->
-                        Toast.makeText(context, "Failed to delete for sender", Toast.LENGTH_SHORT).show()
-                );
-    }
+        // Common for Text, Image, and Video types
+        holder.textMessage.setVisibility(View.GONE);
+        holder.imageView.setVisibility(View.GONE);
+        holder.videoView.setVisibility(View.GONE);
+        holder.thumbnailView.setVisibility(View.GONE);
+        holder.progressBar.setVisibility(View.GONE);
 
-    private void deleteMessageForMe(MessageClass messageClass, String recipient) {
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        String senderRoom = messageClass.getSenderRoom();
-        String receiverRoom = messageClass.getRecieverRoom();
-        String senderMessageId = messageClass.getSenderMessageId();
-        String recieverMessageId = messageClass.getRecieverMessageId();
-
-        if (recipient.equals("sender")) {
-            database.getReference().child("one-one-chats")
-                    .child(senderRoom).child(senderMessageId)
-                    .removeValue()
-                    .addOnSuccessListener(aVoid ->
-                            Toast.makeText(context, "Message deleted for you", Toast.LENGTH_SHORT).show())
-                    .addOnFailureListener(e ->
-                            Toast.makeText(context, "Failed to delete", Toast.LENGTH_SHORT).show());
-        } else {
-            database.getReference().child("one-one-chats")
-                    .child(receiverRoom).child(recieverMessageId)
-                    .removeValue()
-                    .addOnSuccessListener(aVoid ->
-                            Toast.makeText(context, "Message deleted for you", Toast.LENGTH_SHORT).show())
-                    .addOnFailureListener(e ->
-                            Toast.makeText(context, "Failed to delete", Toast.LENGTH_SHORT).show());
+        switch (message.getMessageType()) {
+            case "Text":
+                holder.textMessage.setVisibility(View.VISIBLE);
+                holder.textMessage.setText(message.getMessage());
+                break;
+            case "Image":
+                holder.imageView.setVisibility(View.VISIBLE);
+                Glide.with(context).load(message.getMediaUrl()).error(R.drawable.error_image).into(holder.imageView);
+                break;
+            case "Video":
+                setupVideo(holder, message.getMediaUrl());
+                break;
         }
+
+        holder.downloadButton.setOnClickListener(v -> downloadMedia(context, message.getMediaUrl(), message.getMessageType()));
     }
 
-    private void bindSenderMessage(SenderViewHolder holder, MessageClass messageClass, String time) {
-        //Alert box for deleting messages for both me and others
-        holder.itemView.setOnLongClickListener(v -> {
-            holder.senderDelete.setVisibility(View.VISIBLE);
-            parentLayout.setOnClickListener(view -> {
-                holder.senderDelete.setVisibility(View.GONE);
-            });
+    private void showDeleteOptions(MessageClass message, boolean isSender) {
+        new AlertDialog.Builder(context)
+                .setTitle("Delete Message")
+                .setItems(new String[]{"Delete for Me", "Delete for Everyone"}, (dialog, which) -> {
+                    if (which == 0) {
+                        deleteMessage(message, isSender ? "sender" : "receiver");
+                    } else {
+                        deleteMessageForEveryone(message);
+                    }
+                }).show();
+    }
+
+    private void deleteMessage(MessageClass message, String recipient) {
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        String room = recipient.equals("sender") ? message.getSenderRoom() : message.getRecieverRoom();
+        String messageId = recipient.equals("sender") ? message.getSenderMessageId() : message.getRecieverMessageId();
+
+        database.getReference().child("one-one-chats").child(room).child(messageId).removeValue()
+                .addOnSuccessListener(aVoid -> Toast.makeText(context, "Message deleted", Toast.LENGTH_SHORT).show())
+                .addOnFailureListener(e -> Toast.makeText(context, "Failed to delete", Toast.LENGTH_SHORT).show());
+    }
+
+    private void deleteMessageForEveryone(MessageClass message) {
+        deleteMessage(message, "sender");
+        deleteMessage(message, "receiver");
+    }
+
+    private void setupVideo(MessageViewHolder holder, String videoUrl) {
+        // Show VideoView and Thumbnail initially
+        holder.videoView.setVisibility(View.VISIBLE);
+        holder.thumbnailView.setVisibility(View.VISIBLE);
+
+        // Load thumbnail using Glide
+        Glide.with(context)
+                .load(videoUrl)
+                .error(R.drawable.error_image)
+                .into(holder.thumbnailView);
+
+        // Set video URI for playback
+        holder.videoView.setVideoURI(Uri.parse(videoUrl));
+
+        // Set OnPreparedListener to handle video playback
+        holder.videoView.setOnPreparedListener(mp -> {
+            // Set video to loop when it finishes
+            mp.setLooping(true);
+            // Hide thumbnail and start playing video
+            holder.thumbnailView.setVisibility(View.GONE);
+            holder.videoView.start();
+        });
+
+        // Set OnErrorListener to handle video loading errors
+        holder.videoView.setOnErrorListener((mp, what, extra) -> {
+            // Show error message and display the thumbnail again if the video fails to load
+            Toast.makeText(context, "Error loading video", Toast.LENGTH_SHORT).show();
+            holder.thumbnailView.setVisibility(View.VISIBLE);
             return true;
         });
 
-        String status = messageClass.getMessageStatus();
+        // Toggle video play/pause when the thumbnail is clicked
+        holder.thumbnailView.setOnClickListener(v -> toggleVideo(holder));
 
-        if ("scheduled".equals(status)) {  // Safe null check
-            holder.scheduledStatus.setVisibility(View.VISIBLE);
-            holder.scheduledStatus.setText("Scheduled");
-        } else if ("sent".equals(status)) {
-            holder.scheduledStatus.setVisibility(View.GONE);
+        // Toggle video play/pause when the video itself is clicked
+        holder.videoView.setOnClickListener(v -> toggleVideo(holder));
+    }
+
+    private void toggleVideo(MessageViewHolder holder) {
+        // Check if video is already playing
+        if (holder.videoView.isPlaying()) {
+            // Pause video and show thumbnail again
+            holder.videoView.pause();
+            holder.thumbnailView.setVisibility(View.VISIBLE);
         } else {
-            holder.scheduledStatus.setVisibility(View.GONE);
-        }
-
-        holder.senderDelete.setOnClickListener(v -> {
-            // Create an AlertDialog with the options
-            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setTitle("Delete Message")
-                    .setItems(new String[]{"Delete for Me", "Delete for Everyone"}, (dialog, which) -> {
-                        if (which == 0) {
-                            deleteMessageForMe(messageClass, "sender");
-                        }
-                        else if (which == 1) {
-                            // "Delete for Everyone" option selected
-                            deleteMessageForEveryone(messageClass);
-                        }
-                    })
-                    .show();
-        });
-
-        holder.senderTime.setText(time);
-        String messageType = messageClass.getMessageType();
-
-
-        // Reset all views to GONE
-        holder.senderMsg.setVisibility(View.GONE);
-        holder.senderImage.setVisibility(View.GONE);
-        holder.senderVideo.setVisibility(View.GONE);
-        holder.senderThumbnail.setVisibility(View.GONE);
-
-        switch (messageType) {
-            case "Text":
-                holder.senderMsg.setVisibility(View.VISIBLE);
-                holder.senderMsg.setText(messageClass.getMessage());
-                break;
-
-            case "Image":
-                holder.senderImage.setVisibility(View.VISIBLE);
-                Glide.with(context)
-                        .load(messageClass.getMediaUrl())
-                        .error(R.drawable.error_image)
-                        .into(holder.senderImage);
-                break;
-
-            case "Video":
-                holder.senderVideo.setVisibility(View.VISIBLE);
-                holder.senderThumbnail.setVisibility(View.VISIBLE);
-
-                // Load thumbnail
-                Glide.with(context)
-                        .load(messageClass.getMediaUrl())  // Assuming it's the video URL; replace if you have a separate thumbnail
-                        .error(R.drawable.error_image)
-                        .into(holder.senderThumbnail);
-
-                // Set up video URI and controller
-                holder.senderVideo.setVideoURI(Uri.parse(messageClass.getMediaUrl()));
-                MediaController mediaController = new MediaController(context);
-                mediaController.setAnchorView(holder.senderVideo);
-                holder.senderVideo.setMediaController(mediaController);
-
-                holder.progressBar.setVisibility(View.VISIBLE);
-
-                // Video prepared listener
-                holder.senderVideo.setOnPreparedListener(mp -> {
-                    mp.setLooping(true);  // Optional looping
-                    holder.senderThumbnail.setVisibility(View.GONE);  // Hide thumbnail on start
-                    holder.senderVideo.start();  // Start playing
-                });
-
-                // Error handling
-                holder.senderVideo.setOnErrorListener((mp, what, extra) -> {
-                    Toast.makeText(context, "Error loading video", Toast.LENGTH_SHORT).show();
-                    holder.senderThumbnail.setVisibility(View.VISIBLE);  // Show thumbnail as fallback
-                    return true;
-                });
-
-                // Toggle playback on thumbnail click
-                holder.senderThumbnail.setOnClickListener(v -> {
-                    holder.senderThumbnail.setVisibility(View.GONE);  // Hide thumbnail on play
-                    holder.senderVideo.start();
-                });
-
-                // Toggle playback on video click
-                holder.senderVideo.setOnClickListener(v -> {
-                    if (holder.senderVideo.isPlaying()) {
-                        holder.senderVideo.pause();
-                        holder.senderThumbnail.setVisibility(View.VISIBLE);  // Show thumbnail when paused
-                    } else {
-                        holder.senderThumbnail.setVisibility(View.GONE);
-                        holder.senderVideo.start();
-                    }
-                });
-                break;
+            // Start video playback and hide thumbnail
+            holder.thumbnailView.setVisibility(View.GONE);
+            holder.videoView.start();
         }
     }
 
-    private void bindReceiverMessage(ReceiverViewHolder holder, MessageClass messageClass, String time) {
-        holder.receiverTime.setText(time);
-        String messageType = messageClass.getMessageType();
+    private void downloadMedia(Context context, String mediaUrl, String mediaType) {
+        new DownloadMediaTask(context, mediaUrl, mediaType).execute();
+    }
 
-        holder.itemView.setOnLongClickListener(v -> {
-            holder.recieverDelete.setVisibility(View.VISIBLE);
-            parentLayout.setOnClickListener(view -> {
-                holder.recieverDelete.setVisibility(View.GONE);
-            });
-            return true;
-        });
+    private static class DownloadMediaTask extends AsyncTask<Void, Void, Boolean> {
+        private final Context context;
+        private final String mediaUrl;
+        private final String mediaType;
 
-        holder.recieverDelete.setOnClickListener(v->{
-            deleteMessageForMe(messageClass, "reciever");
-        });
+        public DownloadMediaTask(Context context, String mediaUrl, String mediaType) {
+            this.context = context;
+            this.mediaUrl = mediaUrl;
+            this.mediaType = mediaType;
+        }
 
-        // Reset all views to GONE
-        holder.receiverMsg.setVisibility(View.GONE);
-        holder.receiverImage.setVisibility(View.GONE);
-        holder.receiverVideo.setVisibility(View.GONE);
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+            try (InputStream input = new URL(mediaUrl).openStream();
+                 OutputStream output = getOutputStream(context, mediaType)) {
+                if (output == null) return false;
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = input.read(buffer)) != -1) {
+                    output.write(buffer, 0, bytesRead);
+                }
+                return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
 
-        switch (messageType) {
-            case "Text":
-                holder.receiverMsg.setVisibility(View.VISIBLE);
-                holder.receiverMsg.setText(messageClass.getMessage());
-                break;
+        @Override
+        protected void onPostExecute(Boolean success) {
+            Toast.makeText(context, success ? "Downloaded to Gallery" : "Download failed", Toast.LENGTH_SHORT).show();
+        }
 
-            case "Image":
-                holder.receiverImage.setVisibility(View.VISIBLE);
-                Glide.with(context)
-                        .load(messageClass.getMediaUrl())
-                        .error(R.drawable.error_image)
-                        .into(holder.receiverImage);
-                break;
+        private OutputStream getOutputStream(Context context, String mediaType) {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, "Media_" + System.currentTimeMillis());
+            values.put(MediaStore.MediaColumns.MIME_TYPE, mediaType.equals("Image") ? "image/jpeg" : "video/mp4");
+            values.put(MediaStore.MediaColumns.RELATIVE_PATH, mediaType.equals("Image") ? Environment.DIRECTORY_PICTURES : Environment.DIRECTORY_MOVIES);
 
-            case "Video":
-                holder.receiverVideo.setVisibility(View.VISIBLE);
-                holder.receiverThumbnail.setVisibility(View.VISIBLE);
-
-                // Load thumbnail
-                Glide.with(context)
-                        .load(messageClass.getMediaUrl())  // Assuming it's the video URL; replace if you have a separate thumbnail
-                        .error(R.drawable.error_image)
-                        .into(holder.receiverThumbnail);
-
-                // Set up video URI and controller
-                holder.receiverVideo.setVideoURI(Uri.parse(messageClass.getMediaUrl()));
-                MediaController mediaController = new MediaController(context);
-                mediaController.setAnchorView(holder.receiverVideo);
-                holder.receiverVideo.setMediaController(mediaController);
-
-                holder.progressBar.setVisibility(View.VISIBLE);
-
-                // Video prepared listener
-                holder.receiverVideo.setOnPreparedListener(mp -> {
-                    mp.setLooping(true);  // Optional looping
-                    holder.receiverThumbnail.setVisibility(View.GONE);  // Hide thumbnail on start
-                    holder.receiverVideo.start();  // Start playing
-                });
-
-                // Error handling
-                holder.receiverVideo.setOnErrorListener((mp, what, extra) -> {
-                    Toast.makeText(context, "Error loading video", Toast.LENGTH_SHORT).show();
-                    holder.receiverThumbnail.setVisibility(View.VISIBLE);  // Show thumbnail as fallback
-                    return true;
-                });
-
-                // Toggle playback on thumbnail click
-                holder.receiverThumbnail.setOnClickListener(v -> {
-                    holder.receiverThumbnail.setVisibility(View.GONE);  // Hide thumbnail on play
-                    holder.receiverVideo.start();
-                });
-
-                // Toggle playback on video click
-                holder.receiverVideo.setOnClickListener(v -> {
-                    if (holder.receiverVideo.isPlaying()) {
-                        holder.receiverVideo.pause();
-                        holder.receiverThumbnail.setVisibility(View.VISIBLE);  // Show thumbnail when paused
-                    } else {
-                        holder.receiverThumbnail.setVisibility(View.GONE);
-                        holder.receiverVideo.start();
-                    }
-                });
-                break;
+            ContentResolver resolver = context.getContentResolver();
+            Uri uri = resolver.insert(mediaType.equals("Image") ? MediaStore.Images.Media.EXTERNAL_CONTENT_URI : MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
+            try {
+                return resolver.openOutputStream(uri);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
         }
     }
 
-    // ViewHolder for receiver messages
-    public static class ReceiverViewHolder extends RecyclerView.ViewHolder {
-        TextView receiverMsg, receiverTime;
-        ImageView receiverImage, receiverThumbnail;
-        VideoView receiverVideo;
-        ProgressBar progressBar;
-        ImageButton recieverDelete;
-
-        public ReceiverViewHolder(@NonNull View itemView) {
-            super(itemView);
-            receiverMsg = itemView.findViewById(R.id.recieverText);
-            receiverTime = itemView.findViewById(R.id.recieverTime);
-            receiverImage = itemView.findViewById(R.id.recieverImage);
-            receiverVideo = itemView.findViewById(R.id.recieverVideo);
-            receiverThumbnail = itemView.findViewById(R.id.recieverVideoThumbnail);
-            progressBar = itemView.findViewById(R.id.progressBar1);
-            recieverDelete = itemView.findViewById(R.id.recieverDelete);
-        }
-    }
-
-    // ViewHolder for sender messages
-    public static class SenderViewHolder extends RecyclerView.ViewHolder {
-        TextView senderMsg, senderTime, scheduledStatus;
-        ImageView senderImage, senderThumbnail;
-        VideoView senderVideo;
-        ProgressBar progressBar;
-        ImageButton senderDelete;
-
+    public static class SenderViewHolder extends MessageViewHolder {
         public SenderViewHolder(@NonNull View itemView) {
-            super(itemView);
-            senderMsg = itemView.findViewById(R.id.senderText);
-            senderTime = itemView.findViewById(R.id.senderTime);
-            senderImage = itemView.findViewById(R.id.senderImage);
-            senderVideo = itemView.findViewById(R.id.senderVideo);
-            senderThumbnail = itemView.findViewById(R.id.senderVideoThumbnail);
-            progressBar = itemView.findViewById(R.id.progressBar);
-            senderDelete = itemView.findViewById(R.id.senderDelete);
-            scheduledStatus = itemView.findViewById(R.id.scheduledStatus);
+            super(itemView, R.id.senderText, R.id.senderTime, R.id.senderImage, R.id.senderVideo, R.id.senderVideoThumbnail, R.id.progressBar, R.id.senderDelete, R.id.senderDownload);
+        }
+    }
 
+    public static class ReceiverViewHolder extends MessageViewHolder {
+        public ReceiverViewHolder(@NonNull View itemView) {
+            super(itemView, R.id.recieverText, R.id.recieverTime, R.id.recieverImage, R.id.recieverVideo, R.id.recieverVideoThumbnail, R.id.progressBar1, R.id.recieverDelete, R.id.recieverDownload);
+        }
+    }
+
+    public static class MessageViewHolder extends RecyclerView.ViewHolder {
+        TextView textMessage, messageTime;
+        ImageView imageView, thumbnailView;
+        VideoView videoView;
+        ProgressBar progressBar;
+        ImageButton deleteButton, downloadButton;
+
+        public MessageViewHolder(View itemView, int textMessageId, int timeId, int imageViewId, int videoViewId, int thumbnailId, int progressBarId, int deleteButtonId, int downloadButtonId) {
+            super(itemView);
+            textMessage = itemView.findViewById(textMessageId);
+            messageTime = itemView.findViewById(timeId);
+            imageView = itemView.findViewById(imageViewId);
+            videoView = itemView.findViewById(videoViewId);
+            thumbnailView = itemView.findViewById(thumbnailId);
+            progressBar = itemView.findViewById(progressBarId);
+            deleteButton = itemView.findViewById(deleteButtonId);
+            downloadButton = itemView.findViewById(downloadButtonId);
         }
     }
 }
-

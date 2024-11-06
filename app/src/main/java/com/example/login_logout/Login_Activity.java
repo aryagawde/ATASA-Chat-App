@@ -85,6 +85,7 @@ public class Login_Activity extends AppCompatActivity {
                         editor.putString("userId", userId);
                         editor.apply();
                         Intent intent = new Intent(Login_Activity.this, RecentChats.class);
+                        intent.putExtra("currentUser", username);
                         startActivity(intent);
                         finish();
                     }

@@ -12,7 +12,6 @@
     android:maxHeight="400dp"
     android:minHeight="30dp">
 
-    <!-- Sender's Text Message -->
     <TextView
         android:id="@+id/recieverText"
         android:layout_width="wrap_content"
@@ -33,6 +32,7 @@
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:layout_marginTop="8dp"
+        android:src="@drawable/error_image"
         android:visibility="gone"
         android:scaleType="centerCrop"
         app:layout_constraintTop_toBottomOf="@id/recieverText"
@@ -45,6 +45,7 @@
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:layout_marginTop="8dp"
+        android:src="@drawable/error_image"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/recieverText"
         app:layout_constraintEnd_toEndOf="parent"
@@ -95,4 +96,15 @@
         app:layout_constraintHorizontal_bias="0.112"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/recieverVideo" />
+
+    <ImageButton
+        android:id="@+id/recieverDownload"
+        android:visibility="gone"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="4dp"
+        android:src="@drawable/downloads"
+        app:layout_constraintStart_toStartOf="@id/recieverTime"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintTop_toBottomOf="@id/recieverTime" />
 </androidx.constraintlayout.widget.ConstraintLayout>

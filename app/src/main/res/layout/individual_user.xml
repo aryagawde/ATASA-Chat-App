@@ -21,10 +21,10 @@
             android:textSize="18sp" />
 
         <TextView
-            android:id="@+id/lastMessage"
+            android:id="@+id/statusOfUser"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Last Message"
+            android:text="Status"
             android:paddingTop="2dp"
             android:paddingBottom="2dp" />
 
