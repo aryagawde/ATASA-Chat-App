@@ -46,22 +46,16 @@ public class RecentChats extends AppCompatActivity {
         else {
             currentUser.setText("Unknown");
         }
-
-        // Set up the adapter and layout manager
-        adapter = new UserAdapter(this, list); // Correctly use the class variable
+        
+        adapter = new UserAdapter(this, list);
         recyclerView.setAdapter(adapter);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Attach a layout manager to RecyclerView
-        recyclerView.setLayoutManager(new LinearLayoutManager(this)); // Or GridLayoutManager if desired
-
-        // Initialize Firebase database and data listener
         database = FirebaseDatabase.getInstance();
         loadDataFromFirebase();
     }
 
     private void loadDataFromFirebase(){
-        // Show loading indicator if necessary
-
         database.getReference().child("users").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {

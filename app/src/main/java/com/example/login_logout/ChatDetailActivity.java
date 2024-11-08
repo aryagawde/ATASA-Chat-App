@@ -88,6 +88,16 @@ public class ChatDetailActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_PERMISSION_CODE);
         }
 
+        // Sender Information
+        SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        String sender_id = sharedPreferences.getString("userId", null);
+        String sender_username = sharedPreferences.getString("username", null);
+
+        // Receiver Information
+        String receiverUsername = getIntent().getStringExtra("username");
+        String isOnline = getIntent().getStringExtra("status");
+        String receiver_id = getIntent().getStringExtra("userId");
+
         attach_media.setOnClickListener(v -> {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Select Media Type")
@@ -107,26 +117,15 @@ public class ChatDetailActivity extends AppCompatActivity {
             builder.show();
         });
 
-        // Sender Information
-        String sender_username = getIntent().getStringExtra("username");
-        String isOnline = getIntent().getStringExtra("status");
-        String sender_id = getIntent().getStringExtra("userId");
-
-        // Receiver Information
-        SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-        String receiver_id = sharedPreferences.getString("userId", null);
-        String receiverUsername = sharedPreferences.getString("username", null);
-
-
         // Set up back button
         back.setOnClickListener(view -> {
             Intent intent = new Intent(ChatDetailActivity.this, RecentChats.class);
-            intent.putExtra("currentUser", receiverUsername);
+            intent.putExtra("currentUser", sender_username);
             startActivity(intent);
             finish();
         });
 
-        userfield.setText(sender_username);
+        userfield.setText(receiverUsername);
         if (isOnline.equals("false")) {status.setText("Offline"); }
         else {status.setText("Online");}
 
@@ -188,7 +187,7 @@ public class ChatDetailActivity extends AppCompatActivity {
         String recieverMessageId = recieverMessageRef.getKey();
 
         long timestamp = new Date().getTime();
-        final MessageClass model = new MessageClass(sender_id, message, "Text", "", senderRoom, receiverRoom, senderMessageId, recieverMessageId, "sent", timestamp);
+        final MessageClass model = new MessageClass(sender_id, message, "Text", "", senderRoom, receiverRoom, senderMessageId, recieverMessageId, "Sent", timestamp);
         senderMsgRef.setValue(model)
                 .addOnSuccessListener(unused -> recieverMessageRef.setValue(model));
     }
@@ -200,12 +199,8 @@ public class ChatDetailActivity extends AppCompatActivity {
                 selectedTime.set(year, month, dayOfMonth, hourOfDay, minute);
                 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm a", Locale.getDefault());
                 String scheduledDateTime = sdf.format(selectedTime.getTime()); // use selectedTime here
-                if (selectedTime.getTimeInMillis() > currentTime.getTimeInMillis() + 1800000) {
-                    Toast.makeText(this, "Message Scheduled for: " + scheduledDateTime, Toast.LENGTH_SHORT).show();
-                    scheduleMessage(selectedTime.getTimeInMillis(), message, senderRoom, receiverRoom, sender_id, chatAdapter);
-                } else {
-                    Toast.makeText(this, "Select a time at least 30 minutes from now", Toast.LENGTH_SHORT).show();
-                }
+                Toast.makeText(this, "Message Scheduled for: " + scheduledDateTime, Toast.LENGTH_SHORT).show();
+                scheduleMessage(selectedTime.getTimeInMillis(), message, senderRoom, receiverRoom, sender_id, chatAdapter);
             }, currentTime.get(Calendar.HOUR_OF_DAY), currentTime.get(Calendar.MINUTE), true);
             timePickerDialog.show();
         }, currentTime.get(Calendar.YEAR), currentTime.get(Calendar.MONTH), currentTime.get(Calendar.DAY_OF_MONTH));
@@ -219,11 +214,9 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         //No reciever id because if user deletes the message before it goes to reciever then it is deleted for everyone
         long timestamp = new Date().getTime();
-        final MessageClass model = new MessageClass(sender_id, message, "Text", "", senderRoom, recieverRoom, senderMessageId, "", "scheduled", scheduledTime);
+        final MessageClass model = new MessageClass(sender_id, message, "Text", "", senderRoom, recieverRoom, senderMessageId, "", "Scheduled", scheduledTime);
         senderRef.setValue(model).addOnSuccessListener(unused -> {
-                    // Notify the sender's UI of a scheduled message
-                    Toast.makeText(this, "Message scheduled", Toast.LENGTH_SHORT).show();
-                    startMessageScheduler(scheduledTime, model, senderRoom, recieverRoom, chatAdapter); // Start the delayed task
+                    startMessageScheduler(scheduledTime, model, senderRoom, recieverRoom, chatAdapter);
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Failed to schedule message", Toast.LENGTH_SHORT).show()
@@ -234,7 +227,6 @@ public class ChatDetailActivity extends AppCompatActivity {
     private void startMessageScheduler(long scheduledTimestamp, MessageClass message, String senderRoom, String receiverRoom, ChatAdapter chatAdapter) {
         long delay = scheduledTimestamp - System.currentTimeMillis();
 
-        // Using a Handler with postDelayed to run the task at the scheduled time
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             sendMessageToReceiverRoom(message, senderRoom, receiverRoom, chatAdapter);
         }, delay);
@@ -244,14 +236,23 @@ public class ChatDetailActivity extends AppCompatActivity {
     private void sendMessageToReceiverRoom(MessageClass message, String senderRoom, String receiverRoom, ChatAdapter chatAdapter) {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference senderRoomRef = database.getReference("one-one-chats").child(senderRoom);
-        DatabaseReference receiverRoomRef = database.getReference("one-one-chats").child(receiverRoom);
+        DatabaseReference receiverRoomRef = database.getReference("one-one-chats").child(receiverRoom).push();
 
-        // Update message status in sender's room and move it to receiver's room
-        senderRoomRef.child(message.getSenderMessageId()).child("status").setValue("sent").addOnSuccessListener(unused -> {
-            message.setMessageStatus("sent"); // Update status in the local object
-            chatAdapter.notifyDataSetChanged(); // Notify adapter to refresh UI
+        senderRoomRef.child(message.getSenderMessageId()).child("messageStatus").setValue("Sent").addOnSuccessListener(unused -> {
+            message.setMessageStatus("Sent");
+
+            // Find the position of the message in the adapter
+            int index = chatAdapter.getMessageIndex(message);
+            if (index != -1) {
+                chatAdapter.notifyItemChanged(index);
+            }
         });
-        receiverRoomRef.push().setValue(message)
+
+        String receiverMessageId = receiverRoomRef.getKey();
+        message.setRecieverMessageId(receiverMessageId);
+        message.setMessageStatus("Sent");
+
+        receiverRoomRef.setValue(message)
                 .addOnSuccessListener(unused -> {
                     Toast.makeText(this, "Message delivered to receiver", Toast.LENGTH_SHORT).show();
                 })
@@ -263,17 +264,19 @@ public class ChatDetailActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        String sender_id = sharedPreferences.getString("userId", null);
+        String receiver_id = getIntent().getStringExtra("userId");
+
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && data != null) {
             Uri selectedMediaUri = data.getData();
             if (selectedMediaUri != null) {
-                SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-                String receiver_id = sharedPreferences.getString("userId", null);
                 if (receiver_id != null) {
                     if (requestCode == REQUEST_CODE_IMAGE) {
-                        uploadMediaToFirebase(selectedMediaUri, receiver_id, "Image");
+                        uploadMediaToFirebase(selectedMediaUri, receiver_id, "Image", sender_id);
                     } else if (requestCode == REQUEST_CODE_VIDEO) {
-                        uploadMediaToFirebase(selectedMediaUri, receiver_id, "Video");
+                        uploadMediaToFirebase(selectedMediaUri, receiver_id, "Video", sender_id);
                     }
                 } else {
                     Toast.makeText(this, "Receiver ID not found", Toast.LENGTH_SHORT).show();
@@ -283,15 +286,14 @@ public class ChatDetailActivity extends AppCompatActivity {
     }
 
 
-    private void uploadMediaToFirebase(Uri mediaUri, String receiver_id, String mediaType) {
-        String senderId = getIntent().getStringExtra("userId");
+    private void uploadMediaToFirebase(Uri mediaUri, String receiver_id, String mediaType, String senderId) {
         String fileName = mediaType + "/" + senderId + "_" + System.currentTimeMillis();
         StorageReference storageReference = FirebaseStorage.getInstance().getReference(fileName);
 
         storageReference.putFile(mediaUri).addOnSuccessListener(taskSnapshot -> {
             storageReference.getDownloadUrl().addOnSuccessListener(uri -> {
                 String mediaUrl = uri.toString();
-                sendMessageWithMedia(mediaUrl, receiver_id, mediaType);
+                sendMessageWithMedia(mediaUrl, receiver_id, mediaType, senderId);
             });
         }).addOnFailureListener(e -> {
             Toast.makeText(this, "Failed to upload" + mediaType, Toast.LENGTH_SHORT).show();
@@ -299,8 +301,7 @@ public class ChatDetailActivity extends AppCompatActivity {
     }
 
 
-    private void sendMessageWithMedia(String mediaUrl, String receiver_id, String mediaType) {
-        String senderId = getIntent().getStringExtra("userId");
+    private void sendMessageWithMedia(String mediaUrl, String receiver_id, String mediaType, String senderId) {
         String senderRoom = senderId + receiver_id;
         String receiverRoom = receiver_id + senderId;
 
@@ -312,7 +313,7 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         // Create a message with a media URL
         long timestamp = new Date().getTime();
-        MessageClass mediaMessage = new MessageClass(senderId, mediaType + " is attached", mediaType, mediaUrl, senderRoom, receiverRoom, senderMessageId, recieverMessageId, "sent", timestamp);
+        MessageClass mediaMessage = new MessageClass(senderId, mediaType + " is attached", mediaType, mediaUrl, senderRoom, receiverRoom, senderMessageId, recieverMessageId, "Sent", timestamp);
 
         // Send to both sender and receiver rooms
         senderMsgRef.setValue(mediaMessage).addOnSuccessListener(unused -> recieverMsgRef.setValue(mediaMessage));

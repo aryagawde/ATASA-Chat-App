@@ -81,7 +81,24 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return messageClasses.size();
     }
 
+    public int getMessageIndex(MessageClass message) {
+        for (int i = 0; i < messageClasses.size(); i++) {
+            if (messageClasses.get(i).getSenderMessageId().equals(message.getSenderMessageId())) {
+                return i;
+            }
+        }
+        return -1; // Message not found
+    }
+
     private void bindMessage(MessageViewHolder holder, MessageClass message, String time, boolean isSender) {
+        String statusOfMessage = message.getMessageStatus();
+        if(isSender){
+            holder.messageStatus.setText(statusOfMessage);
+            if(!statusOfMessage.equals("Sent")){
+                holder.deleteButton.setVisibility(View.GONE);
+            }
+        }
+
         holder.messageTime.setText(time);
         holder.downloadButton.setVisibility(View.GONE);
         holder.deleteButton.setOnClickListener(v -> showDeleteOptions(message, isSender));
@@ -248,24 +265,24 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public static class SenderViewHolder extends MessageViewHolder {
         public SenderViewHolder(@NonNull View itemView) {
-            super(itemView, R.id.senderText, R.id.senderTime, R.id.senderImage, R.id.senderVideo, R.id.senderVideoThumbnail, R.id.progressBar, R.id.senderDelete, R.id.senderDownload);
+            super(itemView, R.id.senderText, R.id.senderTime, R.id.senderImage, R.id.senderVideo, R.id.senderVideoThumbnail, R.id.progressBar, R.id.senderDelete, R.id.senderDownload, R.id.senderStatus);
         }
     }
 
     public static class ReceiverViewHolder extends MessageViewHolder {
         public ReceiverViewHolder(@NonNull View itemView) {
-            super(itemView, R.id.recieverText, R.id.recieverTime, R.id.recieverImage, R.id.recieverVideo, R.id.recieverVideoThumbnail, R.id.progressBar1, R.id.recieverDelete, R.id.recieverDownload);
+            super(itemView, R.id.recieverText, R.id.recieverTime, R.id.recieverImage, R.id.recieverVideo, R.id.recieverVideoThumbnail, R.id.progressBar1, R.id.recieverDelete, R.id.recieverDownload, R.id.recieverStatus);
         }
     }
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
-        TextView textMessage, messageTime;
+        TextView textMessage, messageTime, messageStatus;
         ImageView imageView, thumbnailView;
         VideoView videoView;
         ProgressBar progressBar;
         ImageButton deleteButton, downloadButton;
 
-        public MessageViewHolder(View itemView, int textMessageId, int timeId, int imageViewId, int videoViewId, int thumbnailId, int progressBarId, int deleteButtonId, int downloadButtonId) {
+        public MessageViewHolder(View itemView, int textMessageId, int timeId, int imageViewId, int videoViewId, int thumbnailId, int progressBarId, int deleteButtonId, int downloadButtonId, int messageStatusId) {
             super(itemView);
             textMessage = itemView.findViewById(textMessageId);
             messageTime = itemView.findViewById(timeId);
@@ -275,6 +292,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             progressBar = itemView.findViewById(progressBarId);
             deleteButton = itemView.findViewById(deleteButtonId);
             downloadButton = itemView.findViewById(downloadButtonId);
+            messageStatus = itemView.findViewById(messageStatusId);
         }
     }
 }
