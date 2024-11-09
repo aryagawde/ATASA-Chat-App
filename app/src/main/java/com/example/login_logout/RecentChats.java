@@ -93,6 +93,10 @@ public class RecentChats extends AppCompatActivity {
             logoutUser();
             return true;
         }
+        if (id == R.id.groupChat){
+            groupChat();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -115,4 +119,15 @@ public class RecentChats extends AppCompatActivity {
             finish();
         }
     }
+
+    private void groupChat(){
+        SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        String username = sharedPreferences.getString("username", null);
+
+        Intent intent = new Intent(RecentChats.this, GroupChats.class);
+        intent.putExtra("currentUser", username);
+        startActivity(intent);
+        finish();
+    }
+
 }

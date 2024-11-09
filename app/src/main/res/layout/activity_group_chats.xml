@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:background="@color/blue"
+    android:layout_height="match_parent"
+    tools:context=".GroupChats">
+
+    <ImageView
+        android:id="@+id/groupIcon"
+        android:layout_width="78dp"
+        android:layout_height="78dp"
+        android:paddingTop="30dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:src="@drawable/multiple_users_silhouette" />
+
+    <TextView
+        android:id="@+id/currentUser1"
+        android:layout_width="240dp"
+        android:layout_height="78dp"
+        android:hint="Current User Name"
+        android:textColor="@color/black"
+        android:paddingTop="39dp"
+        android:textSize="30dp"
+        app:layout_constraintStart_toEndOf="@id/groupIcon"
+        app:layout_constraintTop_toTopOf="@id/groupIcon"
+        android:textStyle="bold"/>
+
+    <Button
+        android:layout_width="72dp"
+        android:layout_height="48dp"
+        android:id="@+id/back_button1"
+        android:text="Back"
+        app:layout_constraintStart_toEndOf="@id/currentUser1"
+        app:layout_constraintBottom_toBottomOf="@id/currentUser1"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/group_chat_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="600dp"
+        android:paddingTop="10dp"
+        app:layout_constraintTop_toBottomOf="@id/currentUser1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.64" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginBottom="30dp"
+        android:backgroundTint="@color/white"
+        android:id="@+id/addGroup"
+        android:layout_marginRight="15dp"
+        android:src="@drawable/baseline_person_add_alt_1_24"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

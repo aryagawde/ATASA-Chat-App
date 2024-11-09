@@ -1,13 +1,6 @@
 package com.example.login_logout;
 
 import android.app.AlertDialog;
-
-//import com.google.mlkit.nl.languageid.LanguageIdentification;
-//import com.google.mlkit.nl.languageid.LanguageIdentifier;
-//import com.google.cloud.translate.Translate;
-//import com.google.cloud.translate.TranslateOptions;
-//import com.google.cloud.translate.Translation;
-
 import android.app.DatePickerDialog;
 import android.app.DownloadManager;
 import android.app.TimePickerDialog;
@@ -171,27 +164,27 @@ public class ChatDetailActivity extends AppCompatActivity {
             builder.setTitle("Select Send Schedule")
                     .setItems(new String[]{"Now", "Later"}, (dialog, which) -> {
                         if (which == 0) {
-                            SendNow(senderRoom, receiverRoom, sender_id, message);
+                            SendNow(senderRoom, receiverRoom, sender_id, message, sender_username);
                         } else if (which == 1) {
-                            SendLater(senderRoom, receiverRoom, sender_id, message, chatAdapter);
+                            SendLater(senderRoom, receiverRoom, sender_id, message, chatAdapter, sender_username);
                         }
                     });
             builder.show();
         });
     }
 
-    private void SendNow(String senderRoom, String receiverRoom, String sender_id, String message){
+    private void SendNow(String senderRoom, String receiverRoom, String sender_id, String message, String senderName){
         DatabaseReference senderMsgRef = database.getReference().child("one-one-chats").child(senderRoom).push();
         String senderMessageId = senderMsgRef.getKey();
         DatabaseReference recieverMessageRef = database.getReference().child("one-one-chats") .child(receiverRoom).push();
         String recieverMessageId = recieverMessageRef.getKey();
 
         long timestamp = new Date().getTime();
-        final MessageClass model = new MessageClass(sender_id, message, "Text", "", senderRoom, receiverRoom, senderMessageId, recieverMessageId, "Sent", timestamp);
+        final MessageClass model = new MessageClass(sender_id, message, "Text", "", senderRoom, receiverRoom, senderMessageId, recieverMessageId, "Sent", timestamp, senderName);
         senderMsgRef.setValue(model)
                 .addOnSuccessListener(unused -> recieverMessageRef.setValue(model));
     }
-    private void SendLater(String senderRoom, String receiverRoom, String sender_id, String message, ChatAdapter chatAdapter){
+    private void SendLater(String senderRoom, String receiverRoom, String sender_id, String message, ChatAdapter chatAdapter, String senderName){
         Calendar currentTime = Calendar.getInstance();
         DatePickerDialog datePickerDialog = new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
             TimePickerDialog timePickerDialog = new TimePickerDialog(this, (timeView, hourOfDay, minute) -> {
@@ -200,7 +193,7 @@ public class ChatDetailActivity extends AppCompatActivity {
                 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm a", Locale.getDefault());
                 String scheduledDateTime = sdf.format(selectedTime.getTime()); // use selectedTime here
                 Toast.makeText(this, "Message Scheduled for: " + scheduledDateTime, Toast.LENGTH_SHORT).show();
-                scheduleMessage(selectedTime.getTimeInMillis(), message, senderRoom, receiverRoom, sender_id, chatAdapter);
+                scheduleMessage(selectedTime.getTimeInMillis(), message, senderRoom, receiverRoom, sender_id, chatAdapter, senderName);
             }, currentTime.get(Calendar.HOUR_OF_DAY), currentTime.get(Calendar.MINUTE), true);
             timePickerDialog.show();
         }, currentTime.get(Calendar.YEAR), currentTime.get(Calendar.MONTH), currentTime.get(Calendar.DAY_OF_MONTH));
@@ -208,13 +201,13 @@ public class ChatDetailActivity extends AppCompatActivity {
     }
 
 
-    private void scheduleMessage(long scheduledTime, String message, String senderRoom, String recieverRoom, String sender_id, ChatAdapter chatAdapter){
+    private void scheduleMessage(long scheduledTime, String message, String senderRoom, String recieverRoom, String sender_id, ChatAdapter chatAdapter, String senderName){
         DatabaseReference senderRef = FirebaseDatabase.getInstance().getReference("one-one-chats").child(senderRoom).push();
         String senderMessageId = senderRef.getKey();
 
         //No reciever id because if user deletes the message before it goes to reciever then it is deleted for everyone
         long timestamp = new Date().getTime();
-        final MessageClass model = new MessageClass(sender_id, message, "Text", "", senderRoom, recieverRoom, senderMessageId, "", "Scheduled", scheduledTime);
+        final MessageClass model = new MessageClass(sender_id, message, "Text", "", senderRoom, recieverRoom, senderMessageId, "", "Scheduled", scheduledTime, senderName);
         senderRef.setValue(model).addOnSuccessListener(unused -> {
                     startMessageScheduler(scheduledTime, model, senderRoom, recieverRoom, chatAdapter);
                 })
@@ -266,6 +259,7 @@ public class ChatDetailActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         SharedPreferences sharedPreferences = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         String sender_id = sharedPreferences.getString("userId", null);
+        String senderName = sharedPreferences.getString("username", null);
         String receiver_id = getIntent().getStringExtra("userId");
 
         super.onActivityResult(requestCode, resultCode, data);
@@ -274,9 +268,9 @@ public class ChatDetailActivity extends AppCompatActivity {
             if (selectedMediaUri != null) {
                 if (receiver_id != null) {
                     if (requestCode == REQUEST_CODE_IMAGE) {
-                        uploadMediaToFirebase(selectedMediaUri, receiver_id, "Image", sender_id);
+                        uploadMediaToFirebase(selectedMediaUri, receiver_id, "Image", sender_id, senderName);
                     } else if (requestCode == REQUEST_CODE_VIDEO) {
-                        uploadMediaToFirebase(selectedMediaUri, receiver_id, "Video", sender_id);
+                        uploadMediaToFirebase(selectedMediaUri, receiver_id, "Video", sender_id, senderName);
                     }
                 } else {
                     Toast.makeText(this, "Receiver ID not found", Toast.LENGTH_SHORT).show();
@@ -286,14 +280,14 @@ public class ChatDetailActivity extends AppCompatActivity {
     }
 
 
-    private void uploadMediaToFirebase(Uri mediaUri, String receiver_id, String mediaType, String senderId) {
+    private void uploadMediaToFirebase(Uri mediaUri, String receiver_id, String mediaType, String senderId, String senderName) {
         String fileName = mediaType + "/" + senderId + "_" + System.currentTimeMillis();
         StorageReference storageReference = FirebaseStorage.getInstance().getReference(fileName);
 
         storageReference.putFile(mediaUri).addOnSuccessListener(taskSnapshot -> {
             storageReference.getDownloadUrl().addOnSuccessListener(uri -> {
                 String mediaUrl = uri.toString();
-                sendMessageWithMedia(mediaUrl, receiver_id, mediaType, senderId);
+                sendMessageWithMedia(mediaUrl, receiver_id, mediaType, senderId, senderName);
             });
         }).addOnFailureListener(e -> {
             Toast.makeText(this, "Failed to upload" + mediaType, Toast.LENGTH_SHORT).show();
@@ -301,7 +295,7 @@ public class ChatDetailActivity extends AppCompatActivity {
     }
 
 
-    private void sendMessageWithMedia(String mediaUrl, String receiver_id, String mediaType, String senderId) {
+    private void sendMessageWithMedia(String mediaUrl, String receiver_id, String mediaType, String senderId, String senderName) {
         String senderRoom = senderId + receiver_id;
         String receiverRoom = receiver_id + senderId;
 
@@ -313,7 +307,7 @@ public class ChatDetailActivity extends AppCompatActivity {
 
         // Create a message with a media URL
         long timestamp = new Date().getTime();
-        MessageClass mediaMessage = new MessageClass(senderId, mediaType + " is attached", mediaType, mediaUrl, senderRoom, receiverRoom, senderMessageId, recieverMessageId, "Sent", timestamp);
+        MessageClass mediaMessage = new MessageClass(senderId, mediaType + " is attached", mediaType, mediaUrl, senderRoom, receiverRoom, senderMessageId, recieverMessageId, "Sent", timestamp, senderName);
 
         // Send to both sender and receiver rooms
         senderMsgRef.setValue(mediaMessage).addOnSuccessListener(unused -> recieverMsgRef.setValue(mediaMessage));
